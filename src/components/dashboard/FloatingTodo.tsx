@@ -129,7 +129,7 @@ export function FloatingTodo() {
       updated_at: new Date().toISOString(),
       version: 1,
       device_id: 'browser',
-      sync_status: 'local'
+      sync_status: 'pending'
     });
     syncManager.queueSync('dashboard');
     
@@ -139,7 +139,8 @@ export function FloatingTodo() {
   const handleToggleTodo = async (todo: Todo) => {
     await db.todos.update(todo.id, {
       is_completed: !todo.is_completed,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      sync_status: 'pending'
     });
     syncManager.queueSync('dashboard');
   };
@@ -162,7 +163,8 @@ export function FloatingTodo() {
         newTodos.map((todo, index) => 
           db.todos.update(todo.id, { 
             position: index,
-            updated_at: new Date().toISOString() 
+            updated_at: new Date().toISOString(),
+            sync_status: 'pending'
           })
         )
       );

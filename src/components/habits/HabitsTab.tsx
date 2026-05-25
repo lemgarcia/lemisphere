@@ -192,7 +192,7 @@ export function HabitsTab() {
     // Batch update sort_order
     await db.transaction('rw', db.habits, async () => {
       for (let i = 0; i < reordered.length; i++) {
-        await db.habits.update(reordered[i].id, { sort_order: i });
+        await db.habits.update(reordered[i].id, { sort_order: i, updated_at: new Date().toISOString(), sync_status: 'pending' });
       }
     });
     syncManager.queueSync('habits');

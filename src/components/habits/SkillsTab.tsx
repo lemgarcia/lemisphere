@@ -188,7 +188,7 @@ export function SkillsTab() {
     
     await db.transaction('rw', db.skills, async () => {
       for (let i = 0; i < reordered.length; i++) {
-        await db.skills.update(reordered[i].id, { sort_order: i });
+        await db.skills.update(reordered[i].id, { sort_order: i, updated_at: new Date().toISOString(), sync_status: 'pending' });
       }
     });
     syncManager.queueSync('habits');
