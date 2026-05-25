@@ -116,7 +116,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
       if (useAppStore.getState().isAuthenticated) {
         syncManager.syncAll();
       }
-    }, 15000); // Every 15 seconds
+    }, 4000); // Every 4 seconds
     
     return () => {
       clearInterval(timer);

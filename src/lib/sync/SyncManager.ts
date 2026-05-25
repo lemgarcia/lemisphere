@@ -225,6 +225,23 @@ export class SyncManager {
         await dexieTable.bulkPut(remoteRecords.map(r => ({ ...r, sync_status: 'synced' })));
       }
 
+      // DATA LOSS PREVENTION: Cross-device deletion detection
+      // Fetch all remote IDs to see if any local 'synced' records were deleted on another device.
+      // (Only check records belonging to this user)
+      const { data: allRemoteIds } = await supabase.from(supabaseTableName).select('id').eq('user_id', userId);
+      if (allRemoteIds) {
+        const remoteIdSet = new Set(allRemoteIds.map(r => r.id));
+        const localRecords = await dexieTable.filter(r => (!r.user_id || r.user_id === userId)).toArray();
+        const idsToDelete = localRecords
+          .filter(r => r.sync_status === 'synced' && !remoteIdSet.has(r.id))
+          .map(r => r.id);
+        
+        if (idsToDelete.length > 0) {
+          await dexieTable.bulkDelete(idsToDelete);
+          console.log(`[SyncManager] Pruned ${idsToDelete.length} records from ${supabaseTableName} (deleted on another device)`);
+        }
+      }
+
       return true;
     } catch (e: any) {
       console.error(`[SyncManager] Unexpected error for ${supabaseTableName}:`, e?.message ?? e);
