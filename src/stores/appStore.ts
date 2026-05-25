@@ -190,13 +190,22 @@ export const useAppStore = create<AppState & AppActions>()(
         },
 
         logout: async () => {
+          // Pause sync to prevent it from interfering with the wipe
+          const { syncManager } = await import('@/lib/sync/SyncManager');
+          syncManager.pause();
+          
           await supabase.auth.signOut();
+          
           set((state) => {
             state.isAuthenticated = false;
             state.userId = null;
             state.username = null;
             state.profilePicture = null;
           });
+
+          // Wipe local database to guarantee cross-account isolation
+          await db.delete();
+          window.location.href = '/login';
         },
 
         recoverSession: async () => {
