@@ -281,3 +281,9 @@ export interface AuthUser extends BaseRecord {
   email: string;
   password_hash: string;
 }
+
+export interface UserPreferences extends BaseRecord {
+  dashboard_layout: any[];
+  quick_nav_order: string[];
+  hidden_quick_nav: string[];
+}

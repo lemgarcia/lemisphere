@@ -22,6 +22,7 @@ import type {
   TrainingBlueprint,
   AuthUser,
   Todo,
+  UserPreferences,
 } from '@/types/modules';
 import type { RoutineItem } from '@/types';
 
@@ -61,6 +62,9 @@ export class LemisphereDB extends Dexie {
 
   // Todos
   todos!: Table<Todo, string>;
+
+  // User Preferences
+  user_preferences!: Table<UserPreferences, string>;
 
   // Sync tracking
   sync_deletions!: Table<{ id: string; table_name: string; record_id: string; created_at: string }, string>;
@@ -129,6 +133,10 @@ export class LemisphereDB extends Dexie {
 
     this.version(8).stores({
       calendar_events: 'id, user_id, date, day, sync_status, updated_at',
+    });
+
+    this.version(9).stores({
+      user_preferences: 'id, user_id, sync_status, updated_at',
     });
   }
 }

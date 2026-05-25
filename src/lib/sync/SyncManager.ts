@@ -49,6 +49,7 @@ const ALLOWED_COLUMNS_PER_TABLE: Record<string, string[]> = {
   goals: ['id', 'user_id', 'title', 'description', 'category', 'status', 'progress', 'is_auto_progress', 'target_date', 'milestones', 'icon', 'color', 'reward', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   todos: ['id', 'user_id', 'text', 'is_completed', 'position', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   calendar_events: ['id', 'user_id', 'day', 'date', 'time', 'activity', 'type', 'notes', 'repeat', 'remind_at', 'event_notified', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
+  user_preferences: ['id', 'user_id', 'dashboard_layout', 'quick_nav_order', 'hidden_quick_nav', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
 };
 
 const DEFAULTS_PER_TABLE: Record<string, Record<string, unknown>> = {
@@ -71,6 +72,7 @@ const DEFAULTS_PER_TABLE: Record<string, Record<string, unknown>> = {
   training_sessions: { date: '', day_no: 1, session_type: 'Training', training_type: 'Introduction', training_code: '' },
   trick_progress: { trick_name: '', status: 'learning', started_at: new Date().toISOString() },
   training_blueprints: { code: '', category: '', training_name: '', description: '', next_step: '' },
+  user_preferences: { dashboard_layout: [], quick_nav_order: [], hidden_quick_nav: [] },
 };
 
 function sanitizeRecord(record: any, tableName: string, userId: string): Record<string, unknown> {
@@ -223,6 +225,17 @@ export class SyncManager {
 
       if (remoteRecords && remoteRecords.length > 0) {
         await dexieTable.bulkPut(remoteRecords.map(r => ({ ...r, sync_status: 'synced' })));
+        
+        if (supabaseTableName === 'user_preferences') {
+          const latest = remoteRecords[remoteRecords.length - 1]; // Use most recent if multiple
+          if (latest) {
+            useAppStore.setState({
+              dashboardLayout: latest.dashboard_layout || [],
+              quickNavOrder: latest.quick_nav_order || [],
+              hiddenQuickNav: latest.hidden_quick_nav || []
+            });
+          }
+        }
       }
 
       // DATA LOSS PREVENTION: Cross-device deletion detection
@@ -269,6 +282,17 @@ export class SyncManager {
       if (data && data.length > 0) {
         await dexieTable.bulkPut(data.map(r => ({ ...r, sync_status: 'synced' })));
         console.log(`[SyncManager] Restored ${data.length} records to ${supabaseTableName} from cloud.`);
+
+        if (supabaseTableName === 'user_preferences') {
+          const latest = data[data.length - 1];
+          if (latest) {
+            useAppStore.setState({
+              dashboardLayout: latest.dashboard_layout || [],
+              quickNavOrder: latest.quick_nav_order || [],
+              hiddenQuickNav: latest.hidden_quick_nav || []
+            });
+          }
+        }
       }
 
       return true;
@@ -317,6 +341,7 @@ export class SyncManager {
         return [
           { dexie: db.todos, supabase: 'todos' },
           { dexie: db.calendar_events, supabase: 'calendar_events' },
+          { dexie: db.user_preferences, supabase: 'user_preferences' },
         ];
       default:
         return [];

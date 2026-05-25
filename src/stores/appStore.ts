@@ -11,6 +11,29 @@ import type { ModuleId, SyncState, DashboardWidget } from '@/types';
 import { getDeviceId, generateId } from '@/utils';
 import { db } from '@/lib/db';
 import { supabase } from '@/lib/supabase/client';
+import { syncManager } from '@/lib/sync/SyncManager';
+
+const pushPreferencesToDexie = async (state: AppState) => {
+  if (!state.userId) return;
+  const prefId = state.userId;
+  
+  const existing = await db.user_preferences.get(prefId);
+  const prefs = {
+    id: prefId,
+    user_id: state.userId,
+    dashboard_layout: state.dashboardLayout,
+    quick_nav_order: state.quickNavOrder,
+    hidden_quick_nav: state.hiddenQuickNav,
+    sync_status: 'pending',
+    created_at: existing?.created_at || new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    version: (existing?.version || 0) + 1,
+    device_id: state.deviceId || 'browser'
+  };
+
+  await db.user_preferences.put(prefs as any);
+  syncManager.queueSync('dashboard');
+};
 
 interface AppState {
   // ── Identity ───────────────────────────────────────────────────────────
@@ -106,20 +129,26 @@ export const useAppStore = create<AppState & AppActions>()(
         toggleCommandPalette: () =>
           set((state) => { state.commandPaletteOpen = !state.commandPaletteOpen; }),
 
-        setDashboardLayout: (layout) =>
-          set((state) => { state.dashboardLayout = layout; }),
+        setDashboardLayout: (layout) => {
+          set((state) => { state.dashboardLayout = layout; });
+          pushPreferencesToDexie(get());
+        },
 
-        setQuickNavOrder: (order) =>
-          set((state) => { state.quickNavOrder = order; }),
+        setQuickNavOrder: (order) => {
+          set((state) => { state.quickNavOrder = order; });
+          pushPreferencesToDexie(get());
+        },
 
-        toggleQuickNavVisibility: (key) =>
+        toggleQuickNavVisibility: (key) => {
           set((state) => {
             if (state.hiddenQuickNav.includes(key)) {
               state.hiddenQuickNav = state.hiddenQuickNav.filter(k => k !== key);
             } else {
               state.hiddenQuickNav.push(key);
             }
-          }),
+          });
+          pushPreferencesToDexie(get());
+        },
 
         setShowTodoBubble: (show) =>
           set((state) => { state.showTodoBubble = show; }),
