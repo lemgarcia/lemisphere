@@ -19,6 +19,7 @@ const pushPreferencesToDexie = async (state: AppState) => {
   
   const existing = await db.user_preferences.get(prefId);
   const prefs = {
+    ...existing,
     id: prefId,
     user_id: state.userId,
     dashboard_layout: state.dashboardLayout,

@@ -62,7 +62,11 @@ export function TrainingTab() {
     };
 
     if (editingBlueprint) {
-      await db.training_blueprints.update(editingBlueprint.id, payload);
+      await db.training_blueprints.update(editingBlueprint.id, { 
+        ...payload, 
+        sync_status: 'pending', 
+        updated_at: new Date().toISOString() 
+      });
     } else {
       await db.training_blueprints.add({
         id: generateId(),
@@ -190,7 +194,11 @@ export function TrainingTab() {
     };
 
     if (editingSession) {
-      await db.training_sessions.update(editingSession.id, payload);
+      await db.training_sessions.update(editingSession.id, {
+        ...payload,
+        sync_status: 'pending',
+        updated_at: new Date().toISOString()
+      });
     } else {
       await db.training_sessions.add({
         id: generateId(),

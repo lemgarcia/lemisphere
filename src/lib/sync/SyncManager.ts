@@ -49,7 +49,7 @@ const ALLOWED_COLUMNS_PER_TABLE: Record<string, string[]> = {
   goals: ['id', 'user_id', 'title', 'description', 'category', 'status', 'progress', 'is_auto_progress', 'target_date', 'milestones', 'icon', 'color', 'reward', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   todos: ['id', 'user_id', 'text', 'is_completed', 'position', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   calendar_events: ['id', 'user_id', 'day', 'date', 'time', 'activity', 'type', 'notes', 'repeat', 'remind_at', 'event_notified', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
-  user_preferences: ['id', 'user_id', 'dashboard_layout', 'quick_nav_order', 'hidden_quick_nav', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
+  user_preferences: ['id', 'user_id', 'dashboard_layout', 'quick_nav_order', 'hidden_quick_nav', 'budgie_food_rotation', 'budgie_daily_routine', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
 };
 
 const DEFAULTS_PER_TABLE: Record<string, Record<string, unknown>> = {
@@ -72,7 +72,7 @@ const DEFAULTS_PER_TABLE: Record<string, Record<string, unknown>> = {
   training_sessions: { date: '', day_no: 1, session_type: 'Training', training_type: 'Introduction', training_code: '' },
   trick_progress: { trick_name: '', status: 'learning', started_at: new Date().toISOString() },
   training_blueprints: { code: '', category: '', training_name: '', description: '', next_step: '' },
-  user_preferences: { dashboard_layout: [], quick_nav_order: [], hidden_quick_nav: [] },
+  user_preferences: { dashboard_layout: [], quick_nav_order: [], hidden_quick_nav: [], budgie_food_rotation: [], budgie_daily_routine: [] },
 };
 
 function sanitizeRecord(record: any, tableName: string, userId: string): Record<string, unknown> {
@@ -234,6 +234,14 @@ export class SyncManager {
               quickNavOrder: latest.quick_nav_order || [],
               hiddenQuickNav: latest.hidden_quick_nav || []
             });
+            // Update budgie store if there's budgie data
+            if (latest.budgie_food_rotation || latest.budgie_daily_routine) {
+              const { useBudgieStore } = require('@/stores/budgieStore');
+              useBudgieStore.setState({
+                foodRotation: latest.budgie_food_rotation || [],
+                dailyRoutine: latest.budgie_daily_routine || []
+              });
+            }
           }
         }
       }
@@ -291,6 +299,13 @@ export class SyncManager {
               quickNavOrder: latest.quick_nav_order || [],
               hiddenQuickNav: latest.hidden_quick_nav || []
             });
+            if (latest.budgie_food_rotation || latest.budgie_daily_routine) {
+              const { useBudgieStore } = require('@/stores/budgieStore');
+              useBudgieStore.setState({
+                foodRotation: latest.budgie_food_rotation || [],
+                dailyRoutine: latest.budgie_daily_routine || []
+              });
+            }
           }
         }
       }

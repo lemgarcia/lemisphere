@@ -287,4 +287,6 @@ export interface UserPreferences extends BaseRecord {
   dashboard_layout: any[];
   quick_nav_order: string[];
   hidden_quick_nav: string[];
+  budgie_food_rotation?: any[];
+  budgie_daily_routine?: any[];
 }
