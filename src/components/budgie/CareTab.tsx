@@ -26,6 +26,7 @@ const CARE_TYPES: { value: CareEventType; label: string; icon: any; color: strin
 
 export function CareTab() {
   const { selectedBirdId, setSelectedBirdId, foodRotation, dailyRoutine, setFoodRotation, setDailyRoutine } = useBudgieStore();
+  const collapsed = useAppStore(s => s.sidebarCollapsed);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showRoutineModal, setShowRoutineModal] = useState(false);
   const [selectedType, setSelectedType] = useState<CareEventType>('feeding');
@@ -571,7 +572,7 @@ export function CareTab() {
       </div>
 
       {showAddModal && (
-        <div className={styles.modalOverlay}>
+        <div className={styles.modalOverlay} style={{ paddingLeft: collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)', transition: 'padding-left var(--transition-snappy)' }}>
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <h3 style={{ margin: 0 }}>Log Care Event</h3>
@@ -635,7 +636,7 @@ export function CareTab() {
       )}
 
       {editingEvent && (
-        <div className={styles.modalOverlay}>
+        <div className={styles.modalOverlay} style={{ paddingLeft: collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)', transition: 'padding-left var(--transition-snappy)' }}>
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <h3 style={{ margin: 0 }}>Edit Log</h3>
@@ -693,7 +694,7 @@ export function CareTab() {
       )}
 
       {expandedDay && (
-        <div className={styles.modalOverlay} onClick={() => setExpandedDay(null)}>
+        <div className={styles.modalOverlay} onClick={() => setExpandedDay(null)} style={{ paddingLeft: collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)', transition: 'padding-left var(--transition-snappy)' }}>
           <div className={styles.modalContent} onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className={styles.modalHeader}>
               <h3 style={{ margin: 0 }}>Care Logs: {new Date(expandedDay).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' })}</h3>
@@ -749,7 +750,7 @@ export function CareTab() {
       )}
 
       {editingDay && (
-        <div className={styles.modalOverlay} onClick={() => setEditingDay(null)}>
+        <div className={styles.modalOverlay} onClick={() => setEditingDay(null)} style={{ paddingLeft: collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)', transition: 'padding-left var(--transition-snappy)' }}>
           <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3 style={{ margin: 0 }}>Edit Day Log Date</h3>
@@ -770,7 +771,7 @@ export function CareTab() {
       )}
 
       {showRoutineModal && (
-        <div className={styles.modalOverlay}>
+        <div className={styles.modalOverlay} style={{ paddingLeft: collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)', transition: 'padding-left var(--transition-snappy)' }}>
           <div className={styles.modalContent} style={{ maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className={styles.modalHeader}>
               <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}><CalendarDays size={20} /> Routine & Weekly Diet</h3>
