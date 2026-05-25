@@ -14,6 +14,7 @@ import { DeleteConfirmationModal } from '@/components/ui/Modal/DeleteConfirmatio
 
 export function TrainingTab() {
   const { selectedBirdId, setSelectedBirdId } = useBudgieStore();
+  const collapsed = useAppStore(s => s.sidebarCollapsed);
   const [showBlueprintTableModal, setShowBlueprintTableModal] = useState(false);
   const [showBlueprintModal, setShowBlueprintModal] = useState(false);
   const [editingBlueprint, setEditingBlueprint] = useState<TrainingBlueprint | null>(null);
@@ -326,7 +327,7 @@ export function TrainingTab() {
       </div>
 
       {showBlueprintTableModal && (
-        <div className={styles.modalOverlay}>
+        <div className={styles.modalOverlay} style={{ paddingLeft: collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)', transition: 'padding-left var(--transition-snappy)' }}>
           <div className={styles.modalContent} style={{ maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className={styles.modalHeader}>
               <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -411,7 +412,7 @@ export function TrainingTab() {
       )}
 
       {showBlueprintModal && (
-        <div className={styles.modalOverlay} style={{ background: showBlueprintTableModal ? 'rgba(0,0,0,0.2)' : undefined }}>
+        <div className={styles.modalOverlay} style={{ background: showBlueprintTableModal ? 'rgba(0,0,0,0.2)' : undefined, paddingLeft: collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)', transition: 'padding-left var(--transition-snappy)' }}>
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <h3 style={{ margin: 0 }}>{editingBlueprint ? 'Edit' : 'Add'} Training Blueprint</h3>
@@ -450,7 +451,7 @@ export function TrainingTab() {
       )}
 
       {showSessionModal && (
-        <div className={styles.modalOverlay}>
+        <div className={styles.modalOverlay} style={{ paddingLeft: collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)', transition: 'padding-left var(--transition-snappy)' }}>
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <h3 style={{ margin: 0 }}>{editingSession ? 'Edit' : 'Log'} Training Session</h3>
