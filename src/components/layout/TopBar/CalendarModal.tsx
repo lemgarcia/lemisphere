@@ -13,6 +13,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { deleteAndTrack } from '@/lib/db/deleteAndTrack';
 import { syncManager } from '@/lib/sync/SyncManager';
+import { supabase } from '@/lib/supabase/client';
 import styles from './CalendarModal.module.css';
 
 export const TimeSelector24h = ({ value, onChange }: { value: string, onChange: (val: string) => void }) => {
@@ -245,8 +246,8 @@ export function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
       id: generateId(),
       user_id: userId,
       day: selectedDay,
-      time: newItem.time,
-      activity: newItem.activity,
+      time: newItem.time || '',
+      activity: newItem.activity || '',
       type: newItem.type || '',
       notes: newItem.notes || '',
       version: 1,
@@ -255,6 +256,35 @@ export function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+
+    // DEBUG: Push directly to Supabase to catch the exact error
+    const { error: debugError } = await supabase.from('calendar_events').insert({
+      id: item.id,
+      user_id: item.user_id,
+      day: item.day,
+      date: null,
+      time: item.time,
+      activity: item.activity,
+      type: item.type,
+      notes: item.notes,
+      repeat: null,
+      remind_at: null,
+      event_notified: false,
+      version: item.version,
+      device_id: item.device_id,
+      sync_status: item.sync_status,
+      created_at: item.created_at,
+      updated_at: item.updated_at
+    });
+
+    if (debugError) {
+      alert(`SUPABASE DB ERROR: ${debugError.message} \nDetails: ${debugError.details} \nHint: ${debugError.hint}`);
+    }
+
+    await db.calendar_events.add(item);
+    syncManager.queueSync('dashboard');
+    setNewItem({ activity: '', time: '', type: '', notes: '' });
+    showToast('Item added!', 'success');
     if (activeTab === 'events') {
       item.date = dateKey;
       item.repeat = newEventRepeat;
