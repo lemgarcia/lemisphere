@@ -100,9 +100,19 @@ export function ProgramsTab() {
     return await db.fitness_exercises.where('program_day_id').anyOf(dayIds).filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray();
   }, [activeProgram?.id]);
 
-  const handleUpdateTargetSets = async (Sets: number) => {
+  const [localTargetSets, setLocalTargetSets] = useState(activeProgram?.target_sets || 12);
+
+  // Sync local state if DB updates externally
+  React.useEffect(() => {
     if (activeProgram) {
-      await db.fitness_programs.update(activeProgram.id, { target_sets: Sets, updated_at: new Date().toISOString(), sync_status: 'pending' });
+      setLocalTargetSets(activeProgram.target_sets);
+    }
+  }, [activeProgram?.target_sets]);
+
+  const handleUpdateTargetSets = async () => {
+    if (activeProgram && localTargetSets !== activeProgram.target_sets) {
+      const finalSets = Number(localTargetSets) || 1;
+      await db.fitness_programs.update(activeProgram.id, { target_sets: finalSets, updated_at: new Date().toISOString(), sync_status: 'pending' });
       syncManager.queueSync('fitness');
     }
   };
@@ -193,8 +203,9 @@ export function ProgramsTab() {
               Target Sets: 
               <input 
                 type="number" 
-                value={activeProgram.target_sets} 
-                onChange={e => handleUpdateTargetSets(Number(e.target.value))} 
+                value={localTargetSets} 
+                onChange={e => setLocalTargetSets(Number(e.target.value))} 
+                onBlur={handleUpdateTargetSets}
                 style={{ width: '40px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--text-tertiary)', color: 'var(--text-primary)', fontWeight: 'bold', outline: 'none', textAlign: 'center' }} 
               />
             </div>
