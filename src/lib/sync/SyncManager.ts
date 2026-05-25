@@ -166,8 +166,8 @@ export class SyncManager {
         return await this.pullOnly(dexieTable, supabaseTableName, userId);
       }
 
-      // PUSH: Only push pending records
-      const pendingRecords = userRecords.filter(r => r.sync_status === 'pending');
+      // PUSH: Only push pending or local records
+      const pendingRecords = userRecords.filter(r => r.sync_status === 'pending' || r.sync_status === 'local');
       const recordsToPush = pendingRecords.map(r => sanitizeRecord(r, supabaseTableName, userId));
 
       if (recordsToPush.length > 0) {
