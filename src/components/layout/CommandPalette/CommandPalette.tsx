@@ -32,9 +32,20 @@ export function CommandPalette() {
   // Global keyboard shortcut
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || e.key === '/') {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setOpen(true);
+        return;
+      }
+      if (e.key === '/') {
+        // Ignore slash if user is typing inside an input or textarea
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+          return;
+        }
+        e.preventDefault();
+        setOpen(true);
+        return;
       }
       if (e.key === 'Escape') {
         setOpen(false);
