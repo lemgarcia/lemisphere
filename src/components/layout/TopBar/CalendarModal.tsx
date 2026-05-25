@@ -2,7 +2,7 @@
 
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Plus, Trash2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, RotateCcw, CalendarDays, ArrowRight, Save, Calendar, Clock } from 'lucide-react';
+import { X, Upload, Plus, Trash2, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, RotateCcw, CalendarDays, ArrowRight, Save, Calendar, Clock, Edit2 } from 'lucide-react';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, addDays, subMonths, addMonths, format, isSameMonth, isSameDay, isToday, parseISO, isBefore, startOfDay, getDay, differenceInWeeks, getDate, getMonth } from 'date-fns';
 import * as XLSX from 'xlsx';
 import { useAppStore } from '@/stores/appStore';
@@ -122,7 +122,9 @@ export function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
   const formattedDate = format(currentDate, 'MMM d'); // e.g. "May 22"
   const dateKey = format(currentDate, 'yyyy-MM-dd');
 
-  const [newItem, setNewItem] = useState({ time: '', activity: '', type: '', notes: '' });
+  const [newItem, setNewItem] = useState<Partial<RoutineItem>>({ activity: '', time: '', type: '', notes: '' });
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingItemData, setEditingItemData] = useState<Partial<RoutineItem>>({});
   const [newEventRepeat, setNewEventRepeat] = useState<RepeatFrequency>('none');
   const [hasReminder, setHasReminder] = useState(false);
   const [reminderDate, setReminderDate] = useState(dateKey);
@@ -168,6 +170,7 @@ export function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
       setItemToDelete(null);
       setPostponingEventId(null);
       setIsResettingDay(false);
+      setEditingItemId(null);
       setToast(null);
     } else {
       document.body.style.overflow = '';
@@ -261,11 +264,28 @@ export function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
     }
     await db.calendar_events.add(item);
     syncManager.queueSync('dashboard');
-    setNewItem({ time: '', activity: '', type: '', notes: '' });
-    setNewEventRepeat('none');
+    setNewItem({ activity: '', time: '', type: '', notes: '' });
+    showToast('Item added!', 'success');
     setHasReminder(false);
     setReminderDate(dateKey);
     setReminderTime('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingItemId || !editingItemData.time || !editingItemData.activity) return;
+    
+    await db.calendar_events.update(editingItemId, {
+      time: editingItemData.time,
+      activity: editingItemData.activity,
+      type: editingItemData.type,
+      notes: editingItemData.notes,
+      updated_at: new Date().toISOString(),
+      sync_status: 'local'
+    });
+    
+    syncManager.queueSync('dashboard');
+    setEditingItemId(null);
+    showToast('Item updated!', 'success');
   };
 
   const handleDeleteItem = (id: string) => {
@@ -485,7 +505,7 @@ export function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
                           <th>Activity</th>
                           <th>Type</th>
                           <th>Notes</th>
-                          <th style={{ width: 40 }}></th>
+                          <th style={{ width: 64 }}></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -496,22 +516,90 @@ export function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
                             </td>
                           </tr>
                         ) : (
-                          displayedRoutine.map((item) => (
-                            <tr key={item.id}>
-                              <td>{item.time}</td>
-                              <td>{item.activity}</td>
-                              <td>{item.type}</td>
-                              <td>{item.notes}</td>
-                              <td>
-                                <button
-                                  className={styles.deleteBtn}
-                                  onClick={() => handleDeleteItem(item.id)}
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </td>
-                            </tr>
-                          ))
+                          displayedRoutine.map((item) => {
+                            const isEditing = editingItemId === item.id;
+                            return (
+                              <tr key={item.id}>
+                                {isEditing ? (
+                                  <>
+                                    <td>
+                                      <TimeSelector24h
+                                        value={editingItemData.time || ''}
+                                        onChange={(val) => setEditingItemData({ ...editingItemData, time: val })}
+                                      />
+                                    </td>
+                                    <td>
+                                      <input
+                                        placeholder="Activity"
+                                        value={editingItemData.activity || ''}
+                                        onChange={(e) => setEditingItemData({ ...editingItemData, activity: e.target.value })}
+                                        style={{ width: '100%', padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--card-border)', background: 'var(--canvas-bg)', color: 'var(--text-primary)' }}
+                                      />
+                                    </td>
+                                    <td>
+                                      <input
+                                        placeholder="Type"
+                                        value={editingItemData.type || ''}
+                                        onChange={(e) => setEditingItemData({ ...editingItemData, type: e.target.value })}
+                                        style={{ width: '100%', padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--card-border)', background: 'var(--canvas-bg)', color: 'var(--text-primary)' }}
+                                      />
+                                    </td>
+                                    <td>
+                                      <input
+                                        placeholder="Notes"
+                                        value={editingItemData.notes || ''}
+                                        onChange={(e) => setEditingItemData({ ...editingItemData, notes: e.target.value })}
+                                        style={{ width: '100%', padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--card-border)', background: 'var(--canvas-bg)', color: 'var(--text-primary)' }}
+                                      />
+                                    </td>
+                                    <td>
+                                      <div style={{ display: 'flex', gap: '4px' }}>
+                                        <button
+                                          onClick={handleSaveEdit}
+                                          style={{ background: 'var(--accent-violet)', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        >
+                                          <Save size={14} />
+                                        </button>
+                                        <button
+                                          onClick={() => setEditingItemId(null)}
+                                          style={{ background: 'var(--card-border)', color: 'var(--text-secondary)', border: 'none', borderRadius: '6px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        >
+                                          <X size={14} />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </>
+                                ) : (
+                                  <>
+                                    <td>{item.time}</td>
+                                    <td>{item.activity}</td>
+                                    <td>{item.type}</td>
+                                    <td>{item.notes}</td>
+                                    <td>
+                                      <div style={{ display: 'flex', gap: '4px' }}>
+                                        <button
+                                          className={styles.editBtn}
+                                          style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: '4px' }}
+                                          onClick={() => {
+                                            setEditingItemId(item.id);
+                                            setEditingItemData({ ...item });
+                                          }}
+                                        >
+                                          <Edit2 size={14} />
+                                        </button>
+                                        <button
+                                          className={styles.deleteBtn}
+                                          onClick={() => handleDeleteItem(item.id)}
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </>
+                                )}
+                              </tr>
+                            );
+                          })
                         )}
                         <tr className={styles.addFormRow}>
                           <td>
