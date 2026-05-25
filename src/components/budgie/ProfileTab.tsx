@@ -33,49 +33,58 @@ export function ProfileTab() {
     return db.training_sessions.where('bird_id').equals(viewingBird.id).filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray();
   }, [viewingBird?.id]);
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleAddBird = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    if (isSaving) return;
+    setIsSaving(true);
     
-    let photo_url = undefined;
-    const file = formData.get('photo') as File;
-    if (file && file.size > 0) {
-      photo_url = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
-    } else if (editingBird) {
-      photo_url = editingBird.photo_url;
-    }
+    try {
+      const formData = new FormData(e.currentTarget);
+      
+      let photo_url = undefined;
+      const file = formData.get('photo') as File;
+      if (file && file.size > 0) {
+        photo_url = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+      } else if (editingBird) {
+        photo_url = editingBird.photo_url;
+      }
 
-    const newBird: BirdProfile = {
-      id: generateId(),
-      user_id: useAppStore.getState().userId || 'default',
-      name: formData.get('name') as string,
-      species: 'Budgerigar',
-      color_mutation: formData.get('color_mutation') as string,
-      gender: formData.get('gender') as 'male' | 'female' | 'unknown',
-      adopt_date: formData.get('adopt_date') as string || undefined,
-      linked_bird_id: formData.get('linked_bird_id') as string || undefined,
-      photo_url: photo_url,
-      is_active: true,
-      sync_status: 'pending',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      version: 1,
-      device_id: 'default'
-    };
-    
-    if (editingBird) {
-      await db.bird_profiles.update(editingBird.id, newBird);
-    } else {
-      await db.bird_profiles.add(newBird);
+      const newBird: BirdProfile = {
+        id: editingBird ? editingBird.id : generateId(),
+        user_id: useAppStore.getState().userId || 'default',
+        name: formData.get('name') as string,
+        species: 'Budgerigar',
+        color_mutation: formData.get('color_mutation') as string,
+        gender: formData.get('gender') as 'male' | 'female' | 'unknown',
+        adopt_date: formData.get('adopt_date') as string || undefined,
+        linked_bird_id: formData.get('linked_bird_id') as string || undefined,
+        photo_url: photo_url,
+        is_active: true,
+        sync_status: 'local', // Must be local so it gets pushed!
+        created_at: editingBird ? editingBird.created_at : new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        version: editingBird ? editingBird.version + 1 : 1,
+        device_id: 'browser'
+      };
+      
+      if (editingBird) {
+        await db.bird_profiles.update(editingBird.id, newBird);
+      } else {
+        await db.bird_profiles.add(newBird);
+      }
+      syncManager.queueSync('budgie');
+      
+      setShowAddModal(false);
+      setEditingBird(null);
+    } finally {
+      setIsSaving(false);
     }
-    syncManager.queueSync('budgie');
-    
-    setShowAddModal(false);
-    setEditingBird(null);
   };
 
   const confirmDeleteBird = async () => {
