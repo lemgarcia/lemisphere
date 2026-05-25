@@ -1,0 +1,617 @@
+/* Layout */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Modals */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modalContent {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--card-border);
+  background: var(--bg-secondary);
+}
+
+.modalBody {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Inputs */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputGroup label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--canvas-surface);
+  border: 1px solid var(--card-border);
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 15px;
+  transition: all 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--mod-habits-primary);
+  box-shadow: 0 0 0 2px var(--mod-habits-light);
+}
+
+.input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Buttons */
+.primaryButton {
+  background: var(--mod-habits-primary);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.2s;
+  font-size: 14px;
+}
+
+.primaryButton:hover {
+  opacity: 0.9;
+}
+
+.iconSelectGrid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.iconOption {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  border: 2px solid transparent;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.2s;
+}
+
+.iconOption:hover {
+  background: var(--card-border);
+}
+
+/* Color Options */
+.colorSelectGrid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.colorOption {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.colorOption:hover {
+  transform: scale(1.1);
+}
+
+/* Habit Card */
+.habitCard {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s;
+}
+
+.habitCard:hover {
+  border-color: var(--mod-habits-primary);
+  box-shadow: var(--card-shadow);
+}
+
+.habitIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.habitInfo {
+  flex: 1;
+}
+
+.habitTitle {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.habitSubtitle {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.streakBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.checkboxBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 2px solid var(--card-border);
+  background: var(--canvas-surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: all 0.2s;
+}
+
+.checkboxBtn.completed {
+  background: var(--mod-habits-primary);
+  border-color: var(--mod-habits-primary);
+  color: white;
+}
+
+.progressBtn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+
+.progressBtn:hover {
+  background: var(--card-border);
+}
+
+/* Skill Card */
+.skillGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.skillCard {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.skillCard:hover {
+  border-color: var(--mod-habits-primary);
+  box-shadow: var(--card-shadow);
+}
+
+.skillHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.skillIcon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.skillLevel {
+  background: var(--mod-habits-light);
+  color: var(--mod-habits-primary);
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.skillBarContainer {
+  height: 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.skillBarFill {
+  height: 100%;
+  background: var(--mod-habits-primary);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.xpText {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+/* Drag Handle */
+.dragHandle {
+  cursor: grab;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+/* Streak Tiers */
+.streakSpark {
+  background: rgba(156, 163, 175, 0.15);
+  color: #9ca3af;
+}
+.streakEmber {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+.streakIgnite {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+.streakBlaze {
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+}
+.streakSolar {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+.streakRadiant {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(139, 92, 246, 0.2));
+  color: #ec4899;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+}
+
+/* 7 Day Heatmap */
+.heatmapContainer {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.heatmapNode {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--card-border);
+  background: var(--canvas-surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: all 0.2s;
+}
+.heatmapNode.completed {
+  color: white;
+}
+.heatmapNode.disabled {
+  background: var(--bg-secondary);
+  border-color: var(--bg-secondary);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Custom Day Grid */
+.dayGrid {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.dayNode {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: var(--canvas-surface);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+.dayNode.active {
+  background: var(--mod-habits-primary);
+  color: white;
+  border-color: var(--mod-habits-primary);
+}
+
+/* Enhanced Streak Tiers */
+.streakSpark {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--card-border);
+}
+
+.streakEmber {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.streakIgnite {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  font-weight: 700;
+}
+
+.streakBlaze {
+  background: linear-gradient(135deg, #a855f7, #c084fc);
+  color: white;
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.5);
+  font-weight: 800;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.streakSolar {
+  background: linear-gradient(135deg, #3b82f6, #0ea5e9, #38bdf8);
+  color: white;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.6);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+@keyframes pulseRadiant {
+  0% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.5), 0 0 30px rgba(139, 92, 246, 0.5); }
+  50% { box-shadow: 0 0 25px rgba(236, 72, 153, 0.8), 0 0 50px rgba(139, 92, 246, 0.8); }
+  100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.5), 0 0 30px rgba(139, 92, 246, 0.5); }
+}
+
+.streakRadiant {
+  background: linear-gradient(45deg, #ff007f, #7928ca, #ff007f);
+  background-size: 200% auto;
+  color: white;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  animation: pulseRadiant 2s infinite, shineRadiant 3s linear infinite;
+}
+
+@keyframes shineRadiant {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* Card Tier Effects */
+.cardSpark { }
+.cardEmber { border-color: rgba(245, 158, 11, 0.3); }
+.cardIgnite { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1); }
+.cardBlaze { border-color: rgba(168, 85, 247, 0.5); box-shadow: 0 4px 15px rgba(168, 85, 247, 0.15); }
+.cardSolar { border-color: rgba(56, 189, 248, 0.6); box-shadow: 0 0 20px rgba(56, 189, 248, 0.2); }
+.cardRadiant { 
+  border-color: rgba(236, 72, 153, 0.6); 
+  animation: pulseCardRadiant 3s infinite;
+}
+
+@keyframes pulseCardRadiant {
+  0% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.2), 0 0 15px rgba(139, 92, 246, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(236, 72, 153, 0.4), 0 0 30px rgba(139, 92, 246, 0.4); border-color: rgba(139, 92, 246, 0.8); }
+  100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.2), 0 0 15px rgba(139, 92, 246, 0.2); }
+}
+
+/* Icon Picker */
+.iconSelectButton {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--canvas-surface);
+  border: 1px solid var(--card-border);
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.iconSelectButton:hover {
+  border-color: var(--mod-habits-primary);
+  background: var(--card-bg);
+}
+
+.iconPopover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 280px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  gap: 4px;
+  z-index: 100;
+}
+
+.iconPopoverItem {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.iconPopoverItem:hover {
+  background: var(--bg-secondary);
+}
+
+/* Skill Level Tiers */
+.skillCardBeginner {
+  border-color: var(--card-border);
+}
+
+.skillCardIntermediate {
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.05);
+}
+
+.skillCardAdvanced {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
+  background: linear-gradient(to bottom right, var(--card-bg), rgba(59, 130, 246, 0.05));
+}
+
+.skillCardExpert {
+  border-color: rgba(139, 92, 246, 0.6);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2), inset 0 0 10px rgba(245, 158, 11, 0.1);
+  background: linear-gradient(to bottom right, var(--card-bg), rgba(139, 92, 246, 0.08));
+  animation: pulseExpertCard 4s infinite;
+}
+
+@keyframes pulseExpertCard {
+  0% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.4), 0 0 15px rgba(245, 158, 11, 0.2); border-color: rgba(139, 92, 246, 0.8); }
+  100% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.2); }
+}
+
+.skillBarExpert {
+  background: linear-gradient(90deg, #8b5cf6, #f59e0b, #8b5cf6);
+  background-size: 200% auto;
+  animation: shineExpertBar 3s linear infinite;
+}
+
+@keyframes shineExpertBar {
+  to { background-position: 200% center; }
+}
+
+/* Skill Master Level Tiers */
+.skillCardMaster {
+  border-color: rgba(251, 191, 36, 0.8);
+  box-shadow: 0 0 25px rgba(251, 191, 36, 0.3), inset 0 0 15px rgba(251, 191, 36, 0.1);
+  background: linear-gradient(to bottom right, var(--card-bg), rgba(251, 191, 36, 0.05));
+  animation: pulseMasterCard 4s infinite;
+}
+
+@keyframes pulseMasterCard {
+  0% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.2); }
+  50% { box-shadow: 0 0 35px rgba(251, 191, 36, 0.5), 0 0 15px rgba(239, 68, 68, 0.2); border-color: rgba(251, 191, 36, 1); }
+  100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.2); }
+}
+
+.skillBarMaster {
+  background: linear-gradient(90deg, #fbbf24, #ef4444, #fbbf24);
+  background-size: 200% auto;
+  animation: shineMasterBar 3s linear infinite;
+}
+
+@keyframes shineMasterBar {
+  to { background-position: 200% center; }
+}
+
+.difficultyBadge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.diffEasy { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.diffMid { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.diffHard { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.diffExtreme { background: rgba(239, 68, 68, 0.15); color: #ef4444; }

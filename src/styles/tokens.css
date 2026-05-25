@@ -1,0 +1,147 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   LEMISPHERE — DESIGN TOKENS
+   Premium warm-cream + deep-dark design system
+   ════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Typography ─────────────────────────────────────────────────────────── */
+  --font-sans: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ── Sidebar (Deep Dark Charcoal) ───────────────────────────────────────── */
+  --sidebar-bg: #131217;
+  --sidebar-bg-gradient: linear-gradient(180deg, #17161e 0%, #121118 50%, #0f0e14 100%);
+  --sidebar-border: rgba(255, 255, 255, 0.05);
+  --sidebar-text: #a8a3b8;
+  --sidebar-text-active: #f0edf8;
+  --sidebar-text-muted: #5c5872;
+  --sidebar-item-hover: rgba(255, 255, 255, 0.04);
+  --sidebar-item-active: rgba(255, 255, 255, 0.07);
+  --sidebar-item-active-glow: rgba(139, 92, 246, 0.15);
+  --sidebar-glow: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+  --sidebar-width: 220px;
+  --sidebar-width-collapsed: 64px;
+
+  /* ── Main Content (Warm Cream / Parchment) ──────────────────────────────── */
+  --canvas-bg: #f0ebe3;
+  --canvas-bg-gradient: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(139, 92, 246, 0.03) 0%, transparent 60%),
+                         linear-gradient(180deg, #f0ebe3 0%, #ede7de 100%);
+  --canvas-surface: #f8f4ef;
+  --canvas-border: rgba(0, 0, 0, 0.06);
+
+  /* ── Cards ──────────────────────────────────────────────────────────────── */
+  --card-bg: #ffffff;
+  --card-bg-hover: #fdfbf8;
+  --card-border: rgba(0, 0, 0, 0.07);
+  --card-border-hover: rgba(0, 0, 0, 0.12);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06),
+                 0 4px 12px rgba(0, 0, 0, 0.06),
+                 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --card-shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.08),
+                        0 8px 24px rgba(0, 0, 0, 0.08),
+                        0 0 0 1px rgba(0, 0, 0, 0.06);
+  --card-shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.1),
+                           0 16px 40px rgba(0, 0, 0, 0.1),
+                           0 0 0 1px rgba(0, 0, 0, 0.06);
+  --card-radius: 16px;
+  --card-radius-sm: 12px;
+  --card-radius-lg: 20px;
+
+  /* ── Text (on light canvas) ─────────────────────────────────────────────── */
+  --text-primary: #1a1825;
+  --text-secondary: #4a4560;
+  --text-tertiary: #8b8599;
+  --text-muted: #b8b3c4;
+  --text-disabled: #cdc9d8;
+  --text-inverse: #f0edf8;
+  --text-on-dark: #e8e4f2;
+
+  /* ── Module Accent Colors ───────────────────────────────────────────────── */
+  /* Dashboard */
+  --mod-dashboard-primary: #7c5cbf;
+  --mod-dashboard-light: #f0ebff;
+  --mod-dashboard-border: #d4c4f7;
+
+  /* Goals */
+  --mod-goals-primary: #e05c7a;
+  --mod-goals-light: #fff0f3;
+  --mod-goals-border: #f7c4d0;
+
+  /* Fitness */
+  --mod-fitness-primary: #d4a017;
+  --mod-fitness-light: #fffbeb;
+  --mod-fitness-border: #f7e4a0;
+
+  /* Skills/Habits */
+  --mod-habits-primary: #e05c3a;
+  --mod-habits-light: #fff4f0;
+  --mod-habits-border: #f7c4b4;
+
+  /* Budgie Care */
+  --mod-budgie-primary: #17a085;
+  --mod-budgie-light: #ebfff8;
+  --mod-budgie-border: #a0f7e4;
+
+  /* Gaming */
+  --mod-gaming-primary: #5c5cbf;
+  --mod-gaming-light: #f0f0ff;
+  --mod-gaming-border: #c4c4f7;
+
+  /* ── Brand / Accent ─────────────────────────────────────────────────────── */
+  --accent-violet: #8b5cf6;
+  --accent-violet-hover: #7c3aed;
+  --accent-violet-soft: rgba(139, 92, 246, 0.15);
+  --accent-violet-glow: rgba(139, 92, 246, 0.3);
+  --accent-cyan: #06b6d4;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --accent-emerald: #10b981;
+
+  /* ── Status ─────────────────────────────────────────────────────────────── */
+  --status-success: #10b981;
+  --status-success-bg: #f0fdf4;
+  --status-warning: #f59e0b;
+  --status-warning-bg: #fffbeb;
+  --status-error: #ef4444;
+  --status-error-bg: #fef2f2;
+  --status-info: #3b82f6;
+  --status-info-bg: #eff6ff;
+  --status-sync-idle: #8b8599;
+  --status-sync-active: #10b981;
+  --status-sync-error: #ef4444;
+
+  /* ── Spacing ─────────────────────────────────────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── TopBar ──────────────────────────────────────────────────────────────── */
+  --topbar-height: 60px;
+  --topbar-bg: rgba(240, 235, 227, 0.85);
+  --topbar-border: rgba(0, 0, 0, 0.06);
+  --topbar-backdrop: blur(12px);
+
+  /* ── Transitions ─────────────────────────────────────────────────────────── */
+  --transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-snappy: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ── Z-Index ─────────────────────────────────────────────────────────────── */
+  --z-base: 0;
+  --z-card: 10;
+  --z-sticky: 100;
+  --z-overlay: 200;
+  --z-modal: 300;
+  --z-popover: 400;
+  --z-toast: 500;
+  --z-command: 600;
+}

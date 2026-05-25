@@ -1,0 +1,434 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   DASHBOARD PAGE
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Page header ─────────────────────────────────────────────────────────── */
+.header {
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.greeting {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.greetingEmoji {
+  margin-left: 6px;
+}
+
+.dateTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  margin-bottom: 10px;
+}
+
+/* ── Stats row ───────────────────────────────────────────────────────────── */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.statCard {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03), inset 0 2px 0 0 rgba(255, 255, 255, 0.5);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.statCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: var(--card-radius) var(--card-radius) 0 0;
+}
+
+.statCard:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.statCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.statLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.statBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.statValue {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.statSubtext {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+}
+
+/* Module-specific stat card accent colors */
+.statCard.habits::before   { background: linear-gradient(90deg, #e05c3a, #f59e0b); }
+.statCard.progress::before { background: linear-gradient(90deg, #8b5cf6, #5c5cbf); }
+.statCard.goals::before    { background: linear-gradient(90deg, #e05c7a, #f43f5e); }
+.statCard.fitness::before  { background: linear-gradient(90deg, #d4a017, #f59e0b); }
+.statCard.gaming::before   { background: linear-gradient(90deg, #5c5cbf, #8b5cf6); }
+
+.statBadge.habits   { background: var(--mod-habits-light);  color: var(--mod-habits-primary); }
+.statBadge.progress { background: var(--mod-dashboard-light); color: var(--mod-dashboard-primary); }
+.statBadge.goals    { background: var(--mod-goals-light);   color: var(--mod-goals-primary); }
+.statBadge.fitness  { background: var(--mod-fitness-light); color: var(--mod-fitness-primary); }
+.statBadge.gaming   { background: var(--mod-gaming-light);  color: var(--mod-gaming-primary); }
+
+/* ── Main grid ───────────────────────────────────────────────────────────── */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+/* ── Habits widget ───────────────────────────────────────────────────────── */
+.widget {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04), inset 0 2px 0 0 rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.widgetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.widgetTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.widgetTitleIcon {
+  font-size: 16px;
+}
+
+.widgetAction {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  transition: color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.widgetAction:hover { color: var(--accent-violet); text-decoration: none; }
+
+.widgetBody {
+  padding: 16px 18px;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.emptyStateAdd {
+  color: var(--accent-violet);
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+}
+
+.emptyStateAdd:hover { opacity: 0.7; text-decoration: none; }
+
+/* ── Consistency card ────────────────────────────────────────────────────── */
+.consistencyCard {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03), inset 0 2px 0 0 rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.consistencyLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.consistencyValue {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+}
+
+.consistencySubtext {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* ── Module cards row ────────────────────────────────────────────────────── */
+.modulesRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+/* ── Budgie widget, Learning, Roadmap ────────────────────────────────────── */
+.moduleWidget {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04), inset 0 2px 0 0 rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.moduleWidget:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.moduleWidgetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+
+.moduleWidgetHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.moduleWidgetIcon {
+  font-size: 16px;
+}
+
+.moduleWidgetTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.moduleWidgetAction {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.moduleWidgetAction:hover { color: var(--accent-violet); text-decoration: none; }
+
+.moduleWidgetBody {
+  padding: 14px 16px;
+}
+
+.moduleWidgetEmpty {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Bird selector ───────────────────────────────────────────────────────── */
+.birdSelector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.birdSelectorIcon {
+  font-size: 16px;
+}
+
+/* ── Quick navigation section ────────────────────────────────────────────── */
+.quickNavSection {
+  margin-top: 6px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.sectionLabel {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sectionAction {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color var(--transition-fast);
+}
+
+.sectionAction:hover { color: var(--accent-violet); text-decoration: none; }
+
+.quickNavGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+
+.quickNavCard {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: 16px 14px;
+  box-shadow: var(--card-shadow);
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: box-shadow var(--transition-base), transform var(--transition-base), border-color var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.quickNavCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.quickNavCard.budgie::before  { background: linear-gradient(90deg, #17a085, #4ecdc4); }
+.quickNavCard.fitness::before { background: linear-gradient(90deg, #d4a017, #f59e0b); }
+.quickNavCard.goals::before   { background: linear-gradient(90deg, #e05c7a, #f43f5e); }
+.quickNavCard.habits::before  { background: linear-gradient(90deg, #e05c3a, #f59e0b); }
+.quickNavCard.journal::before { background: linear-gradient(90deg, #4a7cbf, #3b82f6); }
+.quickNavCard.gaming::before  { background: linear-gradient(90deg, #5c5cbf, #8b5cf6); }
+
+.quickNavCard:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-3px);
+  border-color: rgba(0,0,0,0.1);
+  text-decoration: none;
+}
+
+.quickNavCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quickNavCardIcon {
+  font-size: 24px;
+}
+
+.quickNavCardTrack {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background: rgba(0, 0, 0, 0.05);
+  padding: 3px 8px;
+  border-radius: 99px;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.quickNavCard:hover .quickNavCardTrack {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--accent-violet);
+}
+
+.quickNavCardName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.quickNavCardSub {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}

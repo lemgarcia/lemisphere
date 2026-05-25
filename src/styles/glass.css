@@ -1,0 +1,85 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   LEMISPHERE — GLASSMORPHISM UTILITIES
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Light Glass (on warm canvas) ───────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04),
+              0 4px 16px rgba(0, 0, 0, 0.06),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.glass-sm {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px) saturate(1.2);
+  -webkit-backdrop-filter: blur(8px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06),
+              inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* ── Dark Glass (overlays, modals) ──────────────────────────────────────── */
+.glass-dark {
+  background: rgba(17, 16, 22, 0.85);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3),
+              0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+
+.glass-dark-sm {
+  background: rgba(23, 22, 30, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Sidebar Glass ──────────────────────────────────────────────────────── */
+.glass-sidebar {
+  background: rgba(19, 18, 23, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ── Frosted Topbar ─────────────────────────────────────────────────────── */
+.glass-topbar {
+  background: rgba(240, 235, 227, 0.88);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* ── Premium Card ───────────────────────────────────────────────────────── */
+.glass-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05),
+              0 4px 16px rgba(0, 0, 0, 0.05),
+              0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  transition: box-shadow var(--transition-base), transform var(--transition-base), border-color var(--transition-base);
+}
+
+.glass-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07),
+              0 8px 28px rgba(0, 0, 0, 0.08),
+              0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+  border-color: rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* ── Command Palette ────────────────────────────────────────────────────── */
+.glass-command {
+  background: rgba(20, 19, 26, 0.95);
+  backdrop-filter: blur(32px) saturate(1.5);
+  -webkit-backdrop-filter: blur(32px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4),
+              0 2px 8px rgba(0, 0, 0, 0.3),
+              0 0 0 1px rgba(139, 92, 246, 0.1) inset;
+}

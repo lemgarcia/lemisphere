@@ -1,0 +1,573 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding-bottom: 40px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius-lg);
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+
+.manageButton {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.manageButton:hover {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.progressCard {
+  background: rgba(220, 215, 205, 0.4);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.progressCardDark {
+  background: rgba(0, 0, 0, 0.03); /* Adjust for dark mode if needed */
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progressTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.progressValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: #3b82f6; /* Blueish for week progress */
+}
+
+.progressValuePurple {
+  color: #a855f7; /* Purple for overall progress */
+}
+
+.progressSubtitle {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.progressBarContainer {
+  background: var(--card-border);
+  border-radius: 8px;
+  height: 6px;
+  width: 100%;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.progressBarFill {
+  background: linear-gradient(90deg, #8b5cf6, #d946ef);
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.5s ease;
+}
+
+.blueprintGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.blueprintCard {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+
+.blueprintDayNumber {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.blueprintDayName {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.blueprintSub {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: rgba(220, 215, 205, 0.2);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+}
+
+.accordionHeader {
+  background: rgba(220, 215, 205, 0.4);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.uploadArea {
+  border: 2px dashed var(--card-border);
+  border-radius: var(--card-radius-lg);
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.uploadArea:hover {
+  border-color: var(--mod-fitness-primary);
+  background: rgba(230, 81, 0, 0.05);
+}
+
+.uploadIcon {
+  color: var(--mod-fitness-primary);
+}
+
+.uploadTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.uploadSub {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  max-width: 300px;
+}
+
+.fileInput {
+  display: none;
+}
+
+.pageTabs {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--card-border);
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+.tabButton {
+  background: none;
+  border: none;
+  padding: 12px 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.tabButton:hover {
+  color: var(--text-primary);
+}
+
+.tabActive {
+  color: var(--mod-fitness-primary);
+  border-bottom-color: var(--mod-fitness-primary);
+}
+
+.tabContent {
+  width: 100%;
+}
+.trackerHeader {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.weekSelector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(220, 215, 205, 0.4);
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+.trackerDayNav {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-primary);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+.restCountdownWidget {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+.restTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.restLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.restLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  letter-spacing: 1px;
+}
+.restTime {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.restSec {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+.restControls {
+  display: flex;
+  gap: 12px;
+}
+.restBtn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--card-border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+.restBtnStart {
+  background: rgba(220, 215, 205, 0.4);
+}
+.restPresetsRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.presetLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+}
+.presetBtn {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.presetBtnActive {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.presetTime {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  margin-left: 4px;
+}
+.plusTenBtn {
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.exerciseTableCard {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+.tableTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+}
+.exTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+.exTable th {
+  text-align: left;
+  padding-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--card-border);
+}
+.exTable td {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--card-border);
+}
+.exTableInput {
+  background: rgba(220, 215, 205, 0.2);
+  border: 1px solid var(--card-border);
+  padding: 8px 12px;
+  border-radius: 8px;
+  width: 80px;
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+}
+.exTableInput[disabled] {
+  opacity: 0.6;
+}
+.modalOverlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modalContentLarge {
+  background: #f4efeb;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 1000px;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 48px rgba(0,0,0,0.2);
+}
+.modalHeaderLarge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.closeBtn {
+  background: rgba(0,0,0,0.05);
+  border: none;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.modalBodyLarge {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+.modalSidebar {
+  width: 300px;
+  flex-shrink: 0;
+  background: #fffdfc;
+  border-right: 1px solid rgba(0,0,0,0.05);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+.sidebarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.sidebarAddBtn {
+  background: rgba(0,0,0,0.05);
+  border: none;
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.sidebarItem {
+  background: #f0f6f8;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+.sidebarItemActive {
+  border-color: rgba(0,0,0,0.1);
+  background: #e8f0f3;
+}
+.modalMainPane {
+  flex: 1;
+  min-width: 0;
+  padding: 32px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.progTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.progTitleInput {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+}
+.actionBtn {
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: #f4efeb;
+  color: var(--text-primary);
+  border: 1px solid rgba(0,0,0,0.1);
+  background: transparent;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+}
+.actionBtn:hover {
+  background: rgba(0,0,0,0.03);
+}
+.dangerBtn {
+  color: #ef4444;
+}
+.dangerBtn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+.dayCardList {
+  display: flex; flex-direction: column; gap: 16px;
+}
+.dayCardItem {
+  background: #fffdfc;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.05);
+  padding: 20px;
+}
+.dayCardHeader {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.dayNameInput {
+  font-size: 16px; font-weight: 700;
+  color: var(--text-primary);
+  border: 1px solid rgba(0,0,0,0.05);
+  background: #fffdfc;
+  padding: 8px 12px;
+  border-radius: 8px;
+  outline: none;
+  width: 100%;
+  max-width: 250px;
+}
+.exerciseList {
+  margin-top: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.exerciseInlineRow {
+  display: flex; gap: 12px; align-items: center;
+}
+.exInlineInput {
+  padding: 10px 12px;
+  min-width: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.05);
+  font-size: 14px; color: var(--text-primary);
+  background: #fffdfc;
+  outline: none;
+}
+
+
+

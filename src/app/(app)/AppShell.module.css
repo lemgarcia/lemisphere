@@ -1,0 +1,50 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   APP SHELL LAYOUT
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--canvas-bg);
+}
+
+.mainContent {
+  flex: 1;
+  min-width: 0;
+  margin-left: var(--sidebar-width);
+  transition: margin-left var(--transition-snappy);
+  display: flex;
+  flex-direction: column;
+}
+
+.mainContent.collapsed {
+  margin-left: var(--sidebar-width-collapsed);
+}
+
+.pageContent {
+  flex: 1;
+  padding: 28px;
+  background: var(--canvas-bg-gradient);
+  min-height: calc(100vh - var(--topbar-height));
+  background-attachment: local;
+}
+
+/* Subtle warm texture overlay */
+.pageContent::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(ellipse 50% 40% at 80% 20%, rgba(212, 160, 23, 0.03) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 20% 80%, rgba(139, 92, 246, 0.03) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pageInner {
+  position: relative;
+  z-index: 1;
+}
