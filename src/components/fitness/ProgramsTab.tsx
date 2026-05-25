@@ -6,6 +6,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { generateId } from '@/utils';
 import { syncManager } from '@/lib/sync/SyncManager';
+import { deleteAndTrack } from '@/lib/db/deleteAndTrack';
 import { UploadCloud, Trash2, CheckCircle2, Circle, Settings2, Calendar, Pencil } from 'lucide-react';
 import styles from '@/app/(app)/fitness/Fitness.module.css';
 import { DeleteConfirmationModal } from '@/components/ui/Modal/DeleteConfirmationModal';
@@ -119,6 +120,16 @@ export function ProgramsTab() {
 
   const handleUpdateLogDate = async (logId: string, newDate: string) => {
     await db.workout_logs.update(logId, { date: newDate, updated_at: new Date().toISOString(), sync_status: 'pending' });
+    syncManager.queueSync('fitness');
+  };
+
+  const handleDeleteLog = async (logId: string) => {
+    if (!confirm('Are you sure you want to delete this workout log?')) return;
+    const exLogs = await db.workout_exercise_logs.where('workout_log_id').equals(logId).toArray();
+    for (const exLog of exLogs) {
+      await deleteAndTrack('workout_exercise_logs', exLog.id);
+    }
+    await deleteAndTrack('workout_logs', logId);
     syncManager.queueSync('fitness');
   };
 
@@ -275,6 +286,13 @@ export function ProgramsTab() {
                           onChange={e => handleUpdateLogDate(log.id, e.target.value)} 
                           style={{ border: 'none', background: 'transparent', color: 'var(--text-secondary)', fontSize: '13px', outline: 'none', fontFamily: 'inherit' }}
                         />
+                        <button 
+                          onClick={() => handleDeleteLog(log.id)}
+                          style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          title="Delete Log"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     </div>
                   );
