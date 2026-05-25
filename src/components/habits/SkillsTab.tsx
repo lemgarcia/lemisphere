@@ -53,7 +53,8 @@ function getBaseXpForLevel(level: SkillLevel): number {
 }
 
 const getDiffClass = (diff: string) => diff === 'easy' ? styles.diffEasy : diff === 'mid' ? styles.diffMid : diff === 'hard' ? styles.diffHard : styles.diffExtreme;
-const getDiffXp = (diff: string) => diff === 'easy' ? '10 XP' : diff === 'mid' ? '25 XP' : diff === 'hard' ? '50 XP' : '100 XP';
+const difficultyMap: Record<TaskDifficulty, number> = { easy: 10, mid: 25, hard: 50, extreme: 100 };
+const getDiffXpNum = (diff: TaskDifficulty | string) => difficultyMap[diff as TaskDifficulty] || 10;
 
 // ── Sortable Skill Card Component ──────────────────────────────────────────────
 
@@ -127,10 +128,10 @@ function SortableSkillCard({ skill, onEdit, onDelete, onToggleChecklist }: Sorta
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <span style={{ fontSize: '14px', color: item.completed ? 'var(--text-tertiary)' : 'var(--text-primary)', textDecoration: item.completed ? 'line-through' : 'none' }}>
-                  {item.text}
+                  {item.text} {item.repeats && item.repeats > 1 ? `(x${item.repeats})` : ''}
                 </span>
                 <span className={`${styles.difficultyBadge} ${getDiffClass(item.difficulty || 'easy')}`} style={{ alignSelf: 'flex-start' }}>
-                  {item.difficulty || 'easy'} ({getDiffXp(item.difficulty || 'easy')})
+                  {item.difficulty || 'easy'} ({getDiffXpNum(item.difficulty || 'easy') * (item.repeats || 1)} XP)
                 </span>
               </div>
             </div>
@@ -163,6 +164,7 @@ export function SkillsTab() {
   const [tempChecklist, setTempChecklist] = useState<ChecklistItem[]>([]);
   const [newItemText, setNewItemText] = useState('');
   const [newItemDifficulty, setNewItemDifficulty] = useState<TaskDifficulty>('easy');
+  const [newItemRepeats, setNewItemRepeats] = useState<number>(1);
 
   const skillsRaw = useLiveQuery(() => db.skills.filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray());
   const skills = useMemo(() => {
@@ -196,8 +198,9 @@ export function SkillsTab() {
 
   const handleAddChecklistItem = () => {
     if (!newItemText.trim()) return;
-    setTempChecklist([...tempChecklist, { id: generateId(), text: newItemText.trim(), completed: false, difficulty: newItemDifficulty }]);
+    setTempChecklist([...tempChecklist, { id: generateId(), text: newItemText.trim(), completed: false, difficulty: newItemDifficulty, repeats: newItemRepeats }]);
     setNewItemText('');
+    setNewItemRepeats(1);
   };
 
   const handleRemoveChecklistItem = (id: string) => {
@@ -213,9 +216,8 @@ export function SkillsTab() {
     ) || [];
 
     // Automatically update XP based on difficulty
-    const difficultyMap: Record<TaskDifficulty, number> = { easy: 10, mid: 25, hard: 50, extreme: 100 };
     const task = skill.checklist?.find(i => i.id === itemId);
-    const xpDelta = task ? difficultyMap[task.difficulty || 'easy'] : 10;
+    const xpDelta = task ? (difficultyMap[task.difficulty || 'easy'] || 10) * (task.repeats || 1) : 10;
 
     let newXp = skill.xp;
     if (completed) newXp += xpDelta;
@@ -293,6 +295,7 @@ export function SkillsTab() {
     setShowIconPicker(false);
     setNewItemText('');
     setNewItemDifficulty('easy');
+    setNewItemRepeats(1);
     setShowSkillModal(true);
   };
 
@@ -433,6 +436,15 @@ export function SkillsTab() {
                     <option value="hard">Hard (50 XP)</option>
                     <option value="extreme">Extreme (100 XP)</option>
                   </select>
+                  <input
+                    type="number"
+                    min="1"
+                    className={styles.input}
+                    style={{ width: '70px' }}
+                    value={newItemRepeats}
+                    onChange={e => setNewItemRepeats(Math.max(1, parseInt(e.target.value) || 1))}
+                    title="Repeats (Multiplier)"
+                  />
                   <button type="button" className={styles.primaryButton} onClick={handleAddChecklistItem}><Plus size={16}/></button>
                 </div>
                 
@@ -445,9 +457,11 @@ export function SkillsTab() {
                             {item.completed && <Check size={10} strokeWidth={3} />}
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontSize: '14px', textDecoration: item.completed ? 'line-through' : 'none' }}>{item.text}</span>
+                            <span style={{ fontSize: '14px', textDecoration: item.completed ? 'line-through' : 'none' }}>
+                              {item.text} {item.repeats && item.repeats > 1 ? `(x${item.repeats})` : ''}
+                            </span>
                             <span className={`${styles.difficultyBadge} ${getDiffClass(item.difficulty || 'easy')}`} style={{ alignSelf: 'flex-start', fontSize: '9px', padding: '1px 4px', marginTop: '2px' }}>
-                              {item.difficulty || 'easy'} ({getDiffXp(item.difficulty || 'easy')})
+                              {item.difficulty || 'easy'} ({getDiffXpNum(item.difficulty || 'easy') * (item.repeats || 1)} XP)
                             </span>
                           </div>
                         </div>
