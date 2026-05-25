@@ -143,7 +143,7 @@ export function ManageProgramsModal({ onClose }: ManageProgramsModalProps) {
   };
 
   const handleUpdateProgram = async (id: string, updates: any) => {
-    await db.fitness_programs.update(id, { ...updates, updated_at: new Date().toISOString() });
+    await db.fitness_programs.update(id, { ...updates, updated_at: new Date().toISOString(), sync_status: 'pending' });
     syncManager.queueSync('fitness');
   };
 
@@ -181,9 +181,9 @@ export function ManageProgramsModal({ onClose }: ManageProgramsModalProps) {
 
   const handleSetActive = async (id: string) => {
     if (activeProgramId) {
-      await db.fitness_programs.update(activeProgramId, { status: 'archived', updated_at: new Date().toISOString() });
+      await db.fitness_programs.update(activeProgramId, { status: 'archived', updated_at: new Date().toISOString(), sync_status: 'pending' });
     }
-    await db.fitness_programs.update(id, { status: 'active', updated_at: new Date().toISOString() });
+    await db.fitness_programs.update(id, { status: 'active', updated_at: new Date().toISOString(), sync_status: 'pending' });
     syncManager.queueSync('fitness');
   };
 
@@ -328,7 +328,7 @@ function DayCard({ day, exercises }: { day: any, exercises: any[] }) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleUpdateDay = async (name: string) => {
-    await db.fitness_program_days.update(day.id, { name, updated_at: new Date().toISOString() });
+    await db.fitness_program_days.update(day.id, { name, updated_at: new Date().toISOString(), sync_status: 'pending' });
     syncManager.queueSync('fitness');
   };
 
@@ -416,7 +416,8 @@ function ExerciseRow({ exercise }: { exercise: any }) {
     await db.fitness_exercises.update(exercise.id, {
       ...localEx,
       rest_sec: Number(localEx.rest_sec) || 0,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      sync_status: 'pending'
     });
     syncManager.queueSync('fitness');
   };

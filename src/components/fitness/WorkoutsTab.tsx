@@ -92,7 +92,8 @@ export function WorkoutsTab() {
     if (activeProgram) {
       await db.fitness_programs.update(activeProgram.id, { 
         current_set: activeProgram.current_set + 1,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        sync_status: 'pending'
       });
       setselectedSet(activeProgram.current_set + 1);
       if (days && days.length > 0) {
@@ -160,7 +161,8 @@ export function WorkoutsTab() {
         await db.workout_exercise_logs.update(exLog.id, { 
           completed: !exLog.completed, 
           weight: currentWeight,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          sync_status: 'pending'
         });
       } else {
         await db.workout_exercise_logs.add({
@@ -187,7 +189,7 @@ export function WorkoutsTab() {
         return l?.completed === true;
       });
       
-      await db.workout_logs.update(logId, { completed: allChecked });
+      await db.workout_logs.update(logId, { completed: allChecked, updated_at: new Date().toISOString(), sync_status: 'pending' });
     });
     syncManager.queueSync('fitness');
   };
@@ -226,7 +228,8 @@ export function WorkoutsTab() {
       if (exLog) {
         await db.workout_exercise_logs.update(exLog.id, { 
           weight: newWeight,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          sync_status: 'pending'
         });
       } else {
         await db.workout_exercise_logs.add({

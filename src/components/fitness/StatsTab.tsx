@@ -25,6 +25,7 @@ export function StatsTab() {
 
   const handleLogWeight = async () => {
     if (!weightInput || !dateInput) return;
+    if (!weightInput || !weightInput) return;
     
     // Check if we already logged on this date
     const existing = await db.body_metrics.where('date').equals(dateInput).filter(x => x.user_id === (useAppStore.getState().userId || 'default')).first();
@@ -32,7 +33,8 @@ export function StatsTab() {
     if (existing) {
       await db.body_metrics.update(existing.id, {
         weight: Number(weightInput),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        sync_status: 'pending'
       });
     } else {
       await db.body_metrics.add({

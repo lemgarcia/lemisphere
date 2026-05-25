@@ -102,13 +102,13 @@ export function ProgramsTab() {
 
   const handleUpdateTargetSets = async (Sets: number) => {
     if (activeProgram) {
-      await db.fitness_programs.update(activeProgram.id, { target_sets: Sets, updated_at: new Date().toISOString() });
+      await db.fitness_programs.update(activeProgram.id, { target_sets: Sets, updated_at: new Date().toISOString(), sync_status: 'pending' });
       syncManager.queueSync('fitness');
     }
   };
 
   const handleUpdateLogDate = async (logId: string, newDate: string) => {
-    await db.workout_logs.update(logId, { date: newDate, updated_at: new Date().toISOString() });
+    await db.workout_logs.update(logId, { date: newDate, updated_at: new Date().toISOString(), sync_status: 'pending' });
     syncManager.queueSync('fitness');
   };
 
