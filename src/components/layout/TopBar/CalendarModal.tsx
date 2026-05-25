@@ -247,8 +247,8 @@ export function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
       day: selectedDay,
       time: newItem.time,
       activity: newItem.activity,
-      type: newItem.type,
-      notes: newItem.notes,
+      type: newItem.type || '',
+      notes: newItem.notes || '',
       version: 1,
       device_id: 'browser',
       sync_status: 'local',
@@ -604,28 +604,28 @@ export function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
                         <tr className={styles.addFormRow}>
                           <td>
                             <TimeSelector24h
-                              value={newItem.time}
+                              value={newItem.time || ''}
                               onChange={(val) => setNewItem({ ...newItem, time: val })}
                             />
                           </td>
                           <td>
                             <input
                               placeholder="Activity"
-                              value={newItem.activity}
+                              value={newItem.activity || ''}
                               onChange={(e) => setNewItem({ ...newItem, activity: e.target.value })}
                             />
                           </td>
                           <td>
                             <input
                               placeholder="Type"
-                              value={newItem.type}
+                              value={newItem.type || ''}
                               onChange={(e) => setNewItem({ ...newItem, type: e.target.value })}
                             />
                           </td>
                           <td>
                             <input
                               placeholder="Notes"
-                              value={newItem.notes}
+                              value={newItem.notes || ''}
                               onChange={(e) => setNewItem({ ...newItem, notes: e.target.value })}
                             />
                           </td>
@@ -735,14 +735,14 @@ export function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
                           <label>Event Name</label>
                           <input
                             placeholder="e.g. Board Meeting"
-                            value={newItem.activity}
+                            value={newItem.activity || ''}
                             onChange={(e) => setNewItem({ ...newItem, activity: e.target.value })}
                           />
                         </div>
                         <div className={styles.formGroup}>
                           <label>Event Time</label>
                           <TimeSelector24h
-                            value={newItem.time}
+                            value={newItem.time || ''}
                             onChange={(val) => setNewItem({ ...newItem, time: val })}
                           />
                         </div>
@@ -750,7 +750,7 @@ export function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
                           <label>Event Details (Notes)</label>
                           <input
                             placeholder="Optional details"
-                            value={newItem.notes}
+                            value={newItem.notes || ''}
                             onChange={(e) => setNewItem({ ...newItem, notes: e.target.value })}
                           />
                         </div>
