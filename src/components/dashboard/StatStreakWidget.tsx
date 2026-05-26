@@ -22,7 +22,7 @@ export function StatStreakWidget() {
     ) : null);
 
   return (
-    <div className={`${styles.statCard} ${styles.cardOrange}`} style={{ height: '100%', margin: 0 }}>
+    <div className={`${styles.statCard} ${styles.cardOrange}`} style={{ height: '100%', margin: 0, overflow: 'visible' }}>
       <div className={styles.statCardHeader}>
         <span className={styles.statLabel}>
           {monitoredHabitId ? 'Monitored Streak' : 'Top Streak'}
@@ -30,37 +30,68 @@ export function StatStreakWidget() {
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', position: 'relative' }}>
           <button 
             onClick={() => setShowDropdown(!showDropdown)}
-            style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', opacity: 0.7, display: 'flex' }}
+            style={{ background: 'var(--canvas-bg)', border: '1px solid var(--card-border)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', padding: '4px', borderRadius: '6px', transition: 'all 0.2s' }}
+            title="Select habit to monitor"
           >
             <Settings size={14} />
           </button>
           
           {showDropdown && (
-            <div style={{
-              position: 'absolute', top: '100%', right: 0, marginTop: '4px',
-              background: 'var(--bg-primary)', border: '1px solid var(--card-border)',
-              borderRadius: '8px', padding: '4px', zIndex: 50,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.2)', width: '160px',
-              display: 'flex', flexDirection: 'column',
-              maxHeight: '200px', overflowY: 'auto'
-            }}>
-              <button 
-                onClick={() => { setMonitoredHabitId(null); setShowDropdown(false); }}
-                style={{ padding: '6px 8px', textAlign: 'left', background: !monitoredHabitId ? 'var(--bg-secondary)' : 'none', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', color: 'var(--text-primary)' }}
-              >
-                🔥 Top Streak (Auto)
-              </button>
-              {allHabits?.map(h => (
+            <>
+              <div 
+                style={{ position: 'fixed', inset: 0, zIndex: 40 }}
+                onClick={() => setShowDropdown(false)}
+              />
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+                background: 'var(--bg-primary)', border: '1px solid var(--card-border)',
+                borderRadius: '12px', padding: '6px', zIndex: 50,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.15)', width: '220px',
+                display: 'flex', flexDirection: 'column', gap: '2px',
+                maxHeight: '260px', overflowY: 'auto'
+              }}>
+                <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', padding: '6px 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Monitor Habit
+                </div>
                 <button 
-                  key={h.id}
-                  onClick={() => { setMonitoredHabitId(h.id); setShowDropdown(false); }}
-                  style={{ padding: '6px 8px', textAlign: 'left', background: monitoredHabitId === h.id ? 'var(--bg-secondary)' : 'none', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', color: 'var(--text-primary)', display: 'flex', gap: '6px', alignItems: 'center' }}
+                  onClick={() => { setMonitoredHabitId(null); setShowDropdown(false); }}
+                  style={{ 
+                    padding: '8px 10px', textAlign: 'left', 
+                    background: !monitoredHabitId ? 'var(--bg-secondary)' : 'transparent', 
+                    border: 'none', borderRadius: '6px', cursor: 'pointer', 
+                    fontSize: '13px', color: !monitoredHabitId ? 'var(--text-primary)' : 'var(--text-secondary)', 
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    fontWeight: !monitoredHabitId ? 600 : 500
+                  }}
+                  onMouseEnter={(e) => { if (monitoredHabitId) e.currentTarget.style.background = 'var(--bg-secondary)'; }}
+                  onMouseLeave={(e) => { if (monitoredHabitId) e.currentTarget.style.background = 'transparent'; }}
                 >
-                  <span style={{ flexShrink: 0 }}>{h.icon}</span> 
-                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.name}</span>
+                  <span style={{ fontSize: '14px' }}>✨</span>
+                  <span style={{ flex: 1 }}>Top Streak (Auto)</span>
                 </button>
-              ))}
-            </div>
+                <div style={{ height: '1px', background: 'var(--card-border)', margin: '4px 0' }} />
+                {allHabits?.map(h => (
+                  <button 
+                    key={h.id}
+                    onClick={() => { setMonitoredHabitId(h.id); setShowDropdown(false); }}
+                    style={{ 
+                      padding: '8px 10px', textAlign: 'left', 
+                      background: monitoredHabitId === h.id ? 'var(--bg-secondary)' : 'transparent', 
+                      border: 'none', borderRadius: '6px', cursor: 'pointer', 
+                      fontSize: '13px', color: monitoredHabitId === h.id ? 'var(--text-primary)' : 'var(--text-secondary)', 
+                      display: 'flex', gap: '8px', alignItems: 'center',
+                      fontWeight: monitoredHabitId === h.id ? 600 : 500
+                    }}
+                    onMouseEnter={(e) => { if (monitoredHabitId !== h.id) e.currentTarget.style.background = 'var(--bg-secondary)'; }}
+                    onMouseLeave={(e) => { if (monitoredHabitId !== h.id) e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <span style={{ flexShrink: 0, fontSize: '14px' }}>{h.icon}</span> 
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{h.name}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', background: 'var(--canvas-bg)', padding: '2px 6px', borderRadius: '4px' }}>{h.streak_current}</span>
+                  </button>
+                ))}
+              </div>
+            </>
           )}
           
           <span className={`${styles.statBadge} ${styles.positive}`}>🔥</span>
