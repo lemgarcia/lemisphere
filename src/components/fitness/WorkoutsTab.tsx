@@ -16,7 +16,7 @@ export function WorkoutsTab() {
   const [selectedSet, setselectedSet] = useState<number | null>(null);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [customTimerSec, setCustomTimerSec] = useState('');
+  const [customTimerSec, setCustomTimerSec] = useState('90');
 
   // Global Timer
   const startTimer = useFitnessStore((s) => s.startTimer);
@@ -416,21 +416,48 @@ export function WorkoutsTab() {
                   {timerActive ? 'RESTING...' : 'REST COUNTDOWN'}
                 </div>
                 <div className={styles.restTime}>
-                  <motion.span 
-                    key={timerRemainingSec}
-                    initial={{ opacity: 0.5, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {timerActive ? timerRemainingSec : '90'}
-                  </motion.span>
+                  {timerActive ? (
+                    <motion.span 
+                      key={timerRemainingSec}
+                      initial={{ opacity: 0.5, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {timerRemainingSec}
+                    </motion.span>
+                  ) : (
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={customTimerSec}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setCustomTimerSec(val);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && customTimerSec) {
+                          startTimer(parseInt(customTimerSec) || 90, selectedDayId!);
+                        }
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        font: 'inherit',
+                        width: `${Math.max(2, customTimerSec.length)}ch`,
+                        outline: 'none',
+                        textAlign: 'center',
+                        padding: 0
+                      }}
+                    />
+                  )}
                   <span className={styles.restSec}>sec</span>
                 </div>
                 <div style={{ height: '2px', background: timerActive ? 'var(--accent-violet)' : 'var(--card-border)', width: '100%', marginTop: '8px', transition: 'background 0.3s ease' }} />
               </div>
               <div className={styles.restControls}>
                 <button 
-                  onClick={() => startTimer(timerActive ? timerRemainingSec : 90, selectedDayId!)} 
+                  onClick={() => startTimer(timerActive ? timerRemainingSec : (parseInt(customTimerSec) || 90), selectedDayId!)} 
                   className={`${styles.restBtn} ${styles.restBtnStart}`}
                   style={{ background: timerActive ? 'rgba(124, 58, 237, 0.1)' : 'var(--accent-violet)', color: timerActive ? 'var(--accent-violet)' : '#fff' }}
                 >
@@ -450,31 +477,21 @@ export function WorkoutsTab() {
               }).slice(0, 4).map(ex => (
                 <button 
                   key={ex.id} 
-                  onClick={() => startTimer(ex.rest_sec, selectedDayId!)}
+                  onClick={() => {
+                    setCustomTimerSec(ex.rest_sec.toString());
+                    startTimer(ex.rest_sec, selectedDayId!);
+                  }}
                   className={`${styles.presetBtn} ${timerTotalSec === ex.rest_sec ? styles.presetBtnActive : ''}`}
                 >
                   {ex.name} <span className={styles.presetTime}>({ex.rest_sec}s)</span>
                 </button>
               ))}
-              <button onClick={() => startTimer((timerActive ? timerRemainingSec : 90) + 10, selectedDayId!)} className={styles.plusTenBtn}>+10s</button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto' }}>
-                <input
-                  type="number"
-                  min="1"
-                  placeholder="Custom sec"
-                  value={customTimerSec}
-                  onChange={e => setCustomTimerSec(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && customTimerSec) { startTimer(parseInt(customTimerSec), selectedDayId!); setCustomTimerSec(''); } }}
-                  style={{ width: '90px', padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--card-border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '13px' }}
-                />
-                <button
-                  onClick={() => { if (customTimerSec) { startTimer(parseInt(customTimerSec), selectedDayId!); setCustomTimerSec(''); } }}
-                  className={styles.presetBtn}
-                  style={{ background: 'var(--accent-violet)', color: '#fff', border: 'none' }}
-                >
-                  <Timer size={12} /> Go
-                </button>
-              </div>
+              <button onClick={() => {
+                const current = timerActive ? timerRemainingSec : (parseInt(customTimerSec) || 90);
+                const next = current + 10;
+                if (!timerActive) setCustomTimerSec(next.toString());
+                startTimer(next, selectedDayId!);
+              }} className={styles.plusTenBtn}>+10s</button>
             </div>
           </motion.div>
         )}
