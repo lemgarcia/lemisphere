@@ -15,6 +15,7 @@ const ALL_EMOJIS = ['🎯','🏃','🏋️','📖','💻','🎨','🎵','🎮','
 
 export function GoalsDashboard() {
   const goals = useLiveQuery(() => db.goals.filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray());
+  const skills = useLiveQuery(() => db.skills.filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray());
   const [activeTab, setActiveTab] = useState<GoalStatus>('active');
   const [showModal, setShowModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
@@ -90,6 +91,7 @@ export function GoalsDashboard() {
           <GoalCard 
             key={goal.id} 
             goal={goal} 
+            skills={skills || []}
             onEdit={() => { setEditingGoal(goal); setShowModal(true); }}
             onDelete={() => setGoalToDelete(goal)}
           />
@@ -121,7 +123,7 @@ export function GoalsDashboard() {
   );
 }
 
-function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, onDelete: () => void }) {
+function GoalCard({ goal, skills, onEdit, onDelete }: { goal: Goal, skills: any[], onEdit: () => void, onDelete: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [expandedMilestones, setExpandedMilestones] = useState<Record<string, boolean>>({});
 
@@ -192,7 +194,7 @@ function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, 
             return { ...item, completed, current_amount };
           } else {
             xpDelta += completed ? xpPerClick : (item.completed ? -xpPerClick : 0);
-            return { ...item, completed };
+            return { ...item, completed, current_amount: completed ? item.target_amount : (item.current_amount || 0) };
           }
         }
         return item;
@@ -265,7 +267,7 @@ function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, 
             return { ...item, completed, current_amount };
           } else {
             xpDelta += completed ? xpPerClick : (item.completed ? -xpPerClick : 0);
-            return { ...item, completed };
+            return { ...item, completed, current_amount: completed ? item.target_amount : (item.current_amount || 0) };
           }
         }
         return item;
@@ -439,9 +441,21 @@ function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, 
                   </div>
                 )}
                 
-                <span style={{ fontSize: '14px', fontWeight: 600, textDecoration: milestone.completed ? 'line-through' : 'none', color: milestone.completed ? 'var(--text-tertiary)' : 'var(--text-primary)' }}>
-                  {milestone.title}
-                </span>
+                {(() => {
+                  const linkedSkillItem = skills.flatMap(s => s.checklist || []).find(i => i.linked_milestone_id === milestone.id && !i.linked_task_id);
+                  const linkedProgress = linkedSkillItem?.target_amount ? ((linkedSkillItem.current_amount || 0) / linkedSkillItem.target_amount) * 100 : (linkedSkillItem?.completed ? 100 : 0);
+                  
+                  return (
+                    <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '4px', padding: '2px 6px', flex: 1, display: 'flex', alignItems: 'center' }}>
+                      {linkedSkillItem && (
+                        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${Math.min(100, Math.max(0, linkedProgress))}%`, background: 'var(--mod-goals-light)', zIndex: 0, transition: 'width 0.3s ease' }} />
+                      )}
+                      <span style={{ position: 'relative', zIndex: 1, fontSize: '14px', fontWeight: 600, textDecoration: milestone.completed ? 'line-through' : 'none', color: milestone.completed ? 'var(--text-tertiary)' : 'var(--text-primary)' }}>
+                        {milestone.title} {linkedSkillItem?.target_amount ? `(${linkedSkillItem.current_amount || 0}/${linkedSkillItem.target_amount})` : ''}
+                      </span>
+                    </div>
+                  );
+                })()}
                 
                 {milestone.tasks && milestone.tasks.length > 0 && (
                   <button type="button" onClick={(e) => toggleMilestoneTasks(e, milestone.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', padding: '4px' }}>
@@ -507,9 +521,21 @@ function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, 
                           onClick={(e) => { e.stopPropagation(); handleToggleTask(milestone.id, task.id, !task.completed); }}
                         />
                       )}
-                      <span style={{ fontSize: '13px', textDecoration: task.completed ? 'line-through' : 'none', color: task.completed ? 'var(--text-tertiary)' : 'var(--text-secondary)' }}>
-                        {task.text}
-                      </span>
+                      {(() => {
+                        const linkedSkillItem = skills.flatMap(s => s.checklist || []).find(i => i.linked_task_id === task.id);
+                        const linkedProgress = linkedSkillItem?.target_amount ? ((linkedSkillItem.current_amount || 0) / linkedSkillItem.target_amount) * 100 : (linkedSkillItem?.completed ? 100 : 0);
+                        
+                        return (
+                          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '4px', padding: '2px 6px', flex: 1, display: 'flex', alignItems: 'center' }}>
+                            {linkedSkillItem && (
+                              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${Math.min(100, Math.max(0, linkedProgress))}%`, background: 'var(--mod-goals-light)', zIndex: 0, transition: 'width 0.3s ease' }} />
+                            )}
+                            <span style={{ position: 'relative', zIndex: 1, fontSize: '13px', textDecoration: task.completed ? 'line-through' : 'none', color: task.completed ? 'var(--text-tertiary)' : 'var(--text-secondary)' }}>
+                              {task.text} {linkedSkillItem?.target_amount ? `(${linkedSkillItem.current_amount || 0}/${linkedSkillItem.target_amount})` : ''}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
                   ))}
                 </div>
