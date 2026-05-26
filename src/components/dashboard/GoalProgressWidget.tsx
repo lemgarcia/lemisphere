@@ -12,10 +12,11 @@ export function GoalProgressWidget() {
   const userId = useAppStore(s => s.userId) || 'default';
 
   const activeGoals = useLiveQuery(async () => {
-    return await db.goals
+    const goals = await db.goals
       .filter(g => g.status === 'active' && g.user_id === userId)
-      .limit(3)
       .toArray();
+    // Sort by progress descending
+    return goals;
   }, [userId]);
 
   return (
@@ -29,7 +30,7 @@ export function GoalProgressWidget() {
           All <ArrowRight size={12} />
         </Link>
       </div>
-      <div className={styles.widgetBody} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div className={styles.widgetBody} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: activeGoals && activeGoals.length > 0 ? 'flex-start' : 'center', overflowY: 'auto', paddingRight: '4px' }}>
         {!activeGoals || activeGoals.length === 0 ? (
           <div className={styles.emptyState}>
             No active goals.{' '}
@@ -40,9 +41,27 @@ export function GoalProgressWidget() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
             {activeGoals.map((goal) => {
-              // Calculate percentage if not directly stored or if tasks exist.
-              // We'll use goal.progress if available, else 0
-              const progress = goal.progress || 0;
+              const calculateProgress = (g: any) => {
+                if (!g.is_auto_progress) return g.progress || 0;
+                if (!g.milestones || g.milestones.length === 0) return 0;
+                
+                let totalWeight = 0;
+                let completedWeight = 0;
+
+                g.milestones.forEach((m: any) => {
+                  if (!m.tasks || m.tasks.length === 0) {
+                    totalWeight += 1;
+                    if (m.completed) completedWeight += 1;
+                  } else {
+                    totalWeight += m.tasks.length;
+                    completedWeight += m.tasks.filter((t: any) => t.completed).length;
+                  }
+                });
+
+                return totalWeight === 0 ? 0 : Math.round((completedWeight / totalWeight) * 100);
+              };
+              
+              const progress = calculateProgress(goal);
               return (
                 <div key={goal.id}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
