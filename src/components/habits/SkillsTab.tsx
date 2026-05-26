@@ -340,7 +340,7 @@ export function SkillsTab() {
     setShowIconPicker(false);
     setNewItemText('');
     setNewItemDifficulty('easy');
-    setNewItemRepeats(1);
+    setNewTargetAmount('');
     setShowSkillModal(true);
   };
 
