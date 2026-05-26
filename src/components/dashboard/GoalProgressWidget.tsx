@@ -33,7 +33,7 @@ export function GoalProgressWidget() {
         {!activeGoals || activeGoals.length === 0 ? (
           <div className={styles.emptyState}>
             No active goals.{' '}
-            <Link href="/goals/new" className={styles.emptyStateAdd}>
+            <Link href="/goals" className={styles.emptyStateAdd}>
               Set a goal →
             </Link>
           </div>

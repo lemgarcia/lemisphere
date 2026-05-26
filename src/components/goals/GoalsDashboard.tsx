@@ -123,6 +123,12 @@ export function GoalsDashboard() {
 
 function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, onDelete: () => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [expandedMilestones, setExpandedMilestones] = useState<Record<string, boolean>>({});
+
+  const toggleMilestoneTasks = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setExpandedMilestones(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const calculateProgress = () => {
     if (!goal.is_auto_progress) return goal.progress;
@@ -299,6 +305,13 @@ function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, 
                 <span style={{ fontSize: '14px', fontWeight: 600, textDecoration: milestone.completed ? 'line-through' : 'none', color: milestone.completed ? 'var(--text-tertiary)' : 'var(--text-primary)' }}>
                   {milestone.title}
                 </span>
+                
+                {milestone.tasks && milestone.tasks.length > 0 && (
+                  <button type="button" onClick={(e) => toggleMilestoneTasks(e, milestone.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', padding: '4px' }}>
+                    {expandedMilestones[milestone.id] ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </button>
+                )}
+
                 {milestone.due_date && (
                   <span style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--text-tertiary)', background: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: '4px' }}>
                     Due: {milestone.due_date}
@@ -312,7 +325,7 @@ function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, 
                 </div>
               )}
               
-              {milestone.tasks && milestone.tasks.length > 0 && (
+              {milestone.tasks && milestone.tasks.length > 0 && expandedMilestones[milestone.id] && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '26px' }}>
                   {milestone.tasks.map(task => (
                     <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -372,6 +385,19 @@ function GoalModal({ goal, onClose }: { goal: Goal | null, onClose: () => void }
 
   const handleRemoveMilestone = (id: string) => {
     setMilestones(milestones.filter(m => m.id !== id));
+  };
+
+  const handleMilestoneTitleChange = (milestoneId: string, val: string) => {
+    setMilestones(milestones.map(m => m.id === milestoneId ? { ...m, title: val } : m));
+  };
+
+  const handleTaskTextChange = (milestoneId: string, taskId: string, val: string) => {
+    setMilestones(milestones.map(m => {
+      if (m.id === milestoneId) {
+        return { ...m, tasks: m.tasks?.map(t => t.id === taskId ? { ...t, text: val } : t) };
+      }
+      return m;
+    }));
   };
 
   const handleMilestoneRewardChange = (milestoneId: string, val: string) => {
@@ -548,6 +574,8 @@ function GoalModal({ goal, onClose }: { goal: Goal | null, onClose: () => void }
                     onRewardChange={(val) => handleMilestoneRewardChange(milestone.id, val)}
                     onAddTask={(text) => handleAddTask(milestone.id, text)}
                     onRemoveTask={(taskId) => handleRemoveTask(milestone.id, taskId)}
+                    onTitleChange={(val) => handleMilestoneTitleChange(milestone.id, val)}
+                    onTaskTextChange={(taskId, val) => handleTaskTextChange(milestone.id, taskId, val)}
                   />
               )}
             </div>
@@ -566,13 +594,19 @@ function GoalModal({ goal, onClose }: { goal: Goal | null, onClose: () => void }
   );
 }
 
-function MilestoneEditor({ milestone, onRemove, onRewardChange, onAddTask, onRemoveTask }: { milestone: Milestone, onRemove: () => void, onRewardChange: (val: string) => void, onAddTask: (text: string) => void, onRemoveTask: (taskId: string) => void }) {
+function MilestoneEditor({ milestone, onRemove, onRewardChange, onAddTask, onRemoveTask, onTitleChange, onTaskTextChange }: { milestone: Milestone, onRemove: () => void, onRewardChange: (val: string) => void, onAddTask: (text: string) => void, onRemoveTask: (taskId: string) => void, onTitleChange: (val: string) => void, onTaskTextChange: (taskId: string, val: string) => void }) {
   const [newTask, setNewTask] = useState('');
 
   return (
     <div className={styles.milestoneItem}>
       <div className={styles.milestoneHeader}>
-        <div style={{ fontWeight: 600, flex: 1 }}>{milestone.title}</div>
+        <input 
+          className={styles.input} 
+          style={{ fontWeight: 600, flex: 1, padding: '4px 8px', background: 'transparent', border: '1px dashed transparent' }} 
+          value={milestone.title}
+          onChange={e => onTitleChange(e.target.value)}
+          placeholder="Milestone Title"
+        />
         <button type="button" onClick={onRemove} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}><X size={16}/></button>
       </div>
 
@@ -591,7 +625,13 @@ function MilestoneEditor({ milestone, onRemove, onRewardChange, onAddTask, onRem
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {milestone.tasks.map(task => (
             <div key={task.id} className={styles.taskItem}>
-              <div style={{ flex: 1, fontSize: '13px' }}>{task.text}</div>
+              <input 
+                className={styles.input} 
+                style={{ flex: 1, fontSize: '13px', padding: '4px 8px', background: 'transparent', border: '1px dashed transparent' }} 
+                value={task.text}
+                onChange={e => onTaskTextChange(task.id, e.target.value)}
+                placeholder="Task description"
+              />
               <button type="button" onClick={() => onRemoveTask(task.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)' }}><X size={12}/></button>
             </div>
           ))}
