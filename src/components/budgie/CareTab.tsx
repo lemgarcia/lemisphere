@@ -48,14 +48,34 @@ export function CareTab() {
   // Also get the linked bird if it exists bi-directionally
   const linkedBird = birds?.find(b => b.id === selectedBird?.linked_bird_id || (b.linked_bird_id === selectedBird?.id && b.id !== selectedBird?.id));
 
-  const careEvents = useLiveQuery(() => {
+  const careEvents = useLiveQuery(async () => {
     if (!selectedBirdId) return [];
-    return db.care_events
+    const events = await db.care_events
       .where('bird_id')
       .equals(selectedBirdId)
       .reverse()
       .sortBy('date');
-  }, [selectedBirdId]);
+    
+    // If linked bird exists, merge their events so checklists show the same state
+    if (linkedBird) {
+      const linkedEvents = await db.care_events
+        .where('bird_id')
+        .equals(linkedBird.id)
+        .toArray();
+      
+      const existingKeys = new Set(events.map(e => `${e.date}|${e.notes || ''}|${e.type}`));
+      for (const le of linkedEvents) {
+        const key = `${le.date}|${le.notes || ''}|${le.type}`;
+        if (!existingKeys.has(key)) {
+          events.push(le);
+          existingKeys.add(key);
+        }
+      }
+      events.sort((a, b) => b.date.localeCompare(a.date) || new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+    
+    return events;
+  }, [selectedBirdId, linkedBird?.id]);
 
   const handleAddEvent = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
