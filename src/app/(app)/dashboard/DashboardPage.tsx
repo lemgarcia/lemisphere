@@ -35,8 +35,8 @@ import { SortableWidget } from '@/components/dashboard/SortableWidget';
 import { FloatingTodo } from '@/components/dashboard/FloatingTodo';
 import { StatStreakWidget } from '@/components/dashboard/StatStreakWidget';
 import { StatExpWidget } from '@/components/dashboard/StatExpWidget';
-import { StatConsistencyWidget } from '@/components/dashboard/StatConsistencyWidget';
-import { StatProgressWidget } from '@/components/dashboard/StatProgressWidget';
+import { StatActiveGoalsWidget } from '@/components/dashboard/StatActiveGoalsWidget';
+import { StatPendingTodosWidget } from '@/components/dashboard/StatPendingTodosWidget';
 import { HabitStreakWidget } from '@/components/dashboard/HabitStreakWidget';
 import { GoalProgressWidget } from '@/components/dashboard/GoalProgressWidget';
 import { GamingNowWidget } from '@/components/dashboard/GamingNowWidget';
@@ -421,8 +421,8 @@ export function DashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', width: '100%', marginBottom: '24px' }}>
           <StatStreakWidget />
           <StatExpWidget />
-          <StatConsistencyWidget />
-          <StatProgressWidget />
+          <StatActiveGoalsWidget />
+          <StatPendingTodosWidget />
         </div>
 
         {/* Bento Grid */}

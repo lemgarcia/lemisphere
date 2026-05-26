@@ -39,14 +39,16 @@ export function FitnessTodayWidget() {
       .filter(d => d.user_id === userId)
       .sortBy('order');
       
-    // Count how many logs exist to guess the current day index
-    const logsCount = await db.workout_logs
-      .where('program_id').equals(activeProgram.id)
-      .filter(l => l.user_id === userId)
-      .count();
+    // Get logs for the current set
+    const currentSetLogs = await db.workout_logs
+      .filter(l => l.program_id === activeProgram.id && l.set_number === activeProgram.current_set && l.user_id === userId)
+      .toArray();
 
-    const currentDayIndex = logsCount % (days.length || 1);
-    const nextDay = days[currentDayIndex];
+    const completedDayIds = new Set(currentSetLogs.filter(l => l.completed).map(l => l.program_day_id));
+    
+    let nextDay = days.find(d => !completedDayIds.has(d.id));
+    
+    if (!nextDay) nextDay = days[0]; // If set is complete but not advanced yet
 
     return { program: activeProgram, status: 'pending' as const, day: nextDay };
   }, [userId]);

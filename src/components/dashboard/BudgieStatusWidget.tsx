@@ -7,7 +7,18 @@ import { db } from '@/lib/db';
 import styles from '@/app/(app)/dashboard/Dashboard.module.css';
 import { useAppStore } from '@/stores/appStore';
 import { useCurrentDay } from '@/hooks/useCurrentDay';
-import { CheckCircle2, Circle } from 'lucide-react';
+import { CheckCircle2, Circle, Droplets, Utensils, Scale, Stethoscope, Pill, Bath, Scissors, Heart } from 'lucide-react';
+
+const CARE_TYPES: Record<string, { label: string; icon: any; color: string }> = {
+  'feeding': { label: 'Feeding', icon: Utensils, color: '#f59e0b' },
+  'water': { label: 'Water Change', icon: Droplets, color: '#3b82f6' },
+  'weight_check': { label: 'Weight Check', icon: Scale, color: '#8b5cf6' },
+  'vet_visit': { label: 'Vet Visit', icon: Stethoscope, color: '#ef4444' },
+  'medication': { label: 'Medication', icon: Pill, color: '#ec4899' },
+  'bath': { label: 'Bath', icon: Bath, color: '#06b6d4' },
+  'nail_trim': { label: 'Nail Trim', icon: Scissors, color: '#64748b' },
+  'health_note': { label: 'Health Note', icon: Heart, color: '#10b981' },
+};
 
 export function BudgieStatusWidget() {
   const userId = useAppStore((s) => s.userId) || 'default';
@@ -70,6 +81,9 @@ export function BudgieStatusWidget() {
           </div>
         ) : (
           careEvents.map((event: any) => {
+            const typeInfo = CARE_TYPES[event.type] || { label: event.type, icon: Circle, color: 'var(--accent-violet)' };
+            const Icon = typeInfo.icon;
+            
             return (
               <div 
                 key={event.id}
@@ -80,10 +94,16 @@ export function BudgieStatusWidget() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: event.color || 'var(--accent-violet)' }} />
+                  <div style={{ 
+                    width: '32px', height: '32px', borderRadius: '50%', 
+                    background: `${typeInfo.color}20`, color: typeInfo.color,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  }}>
+                    <Icon size={16} />
+                  </div>
                   <div>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                      {event.type}
+                      {typeInfo.label}
                     </div>
                     {event.time && <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{event.time}</div>}
                   </div>
