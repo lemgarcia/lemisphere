@@ -333,6 +333,32 @@ function DayCard({ day, exercises }: { day: any, exercises: any[] }) {
     syncManager.queueSync('fitness');
   };
 
+  const handleLinkGoal = async (goalId: string, milestoneId?: string, taskId?: string, taskName?: string, syncDirection?: 'one-way' | 'two-way') => {
+    await db.fitness_program_days.update(day.id, {
+      linked_goal_id: goalId,
+      linked_milestone_id: milestoneId || undefined,
+      linked_task_id: taskId || undefined,
+      linked_task_name: taskName || undefined,
+      sync_direction: syncDirection || 'one-way',
+      updated_at: new Date().toISOString(),
+      sync_status: 'pending'
+    });
+    syncManager.queueSync('fitness');
+  };
+
+  const handleUnlinkGoal = async () => {
+    await db.fitness_program_days.update(day.id, {
+      linked_goal_id: undefined,
+      linked_milestone_id: undefined,
+      linked_task_id: undefined,
+      linked_task_name: undefined,
+      sync_direction: undefined,
+      updated_at: new Date().toISOString(),
+      sync_status: 'pending'
+    });
+    syncManager.queueSync('fitness');
+  };
+
   const confirmDeleteDay = async () => {
     await deleteAndTrack('fitness_program_days', day.id);
     setIsDeleting(false);
@@ -362,14 +388,22 @@ function DayCard({ day, exercises }: { day: any, exercises: any[] }) {
 
   return (
     <div className={styles.dayCardItem}>
-      <div className={styles.dayCardHeader}>
-        <input 
-          type="text" 
-          value={day.name} 
-          onChange={e => handleUpdateDay(e.target.value)} 
-          className={styles.dayNameInput}
-        />
-        <div style={{ display: 'flex', gap: '8px' }}>
+      <div className={styles.dayCardHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+          <input 
+            type="text" 
+            value={day.name} 
+            onChange={e => handleUpdateDay(e.target.value)} 
+            className={styles.dayNameInput}
+            style={{ flex: '0 1 200px' }}
+          />
+          <GoalLinkSelector 
+            item={day}
+            onLink={handleLinkGoal}
+            onUnlink={handleUnlinkGoal}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
           <button onClick={() => setExpanded(!expanded)} className={styles.actionBtn}>
             {expanded ? 'Hide Exercises' : 'Edit Exercises'}
           </button>

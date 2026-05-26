@@ -59,6 +59,7 @@ export const useFitnessStore = create<FitnessState & FitnessActions>()(
             state.timerActive = false;
             state.timerRemainingSec = 0;
             state.timerFinished = true;
+            state.timerDayId = null;
           }
         }),
         dismissTimerFinished: () => set((state) => {
