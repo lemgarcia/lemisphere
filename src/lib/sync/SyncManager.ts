@@ -24,8 +24,8 @@ const MAX_DELETIONS_PER_TABLE = 500;
 // Only these fields will be sent to the cloud, preventing "column not found" errors.
 const ALLOWED_COLUMNS_PER_TABLE: Record<string, string[]> = {
   fitness_programs: ['id', 'user_id', 'name', 'target_sets', 'current_set', 'status', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
-  fitness_program_days: ['id', 'user_id', 'program_id', 'name', 'order', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
-  fitness_exercises: ['id', 'user_id', 'program_day_id', 'name', 'sets', 'target_reps', 'rest_sec', 'muscle_group', 'order', 'linked_goal_id', 'linked_milestone_id', 'linked_task_id', 'linked_task_name', 'sync_direction', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
+  fitness_program_days: ['id', 'user_id', 'program_id', 'name', 'order', 'linked_goal_id', 'linked_milestone_id', 'linked_task_id', 'linked_task_name', 'sync_direction', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
+  fitness_exercises: ['id', 'user_id', 'program_day_id', 'name', 'sets', 'target_reps', 'rest_sec', 'muscle_group', 'order', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   workout_logs: ['id', 'user_id', 'program_id', 'program_day_id', 'set_number', 'date', 'completed', 'duration', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   workout_exercise_logs: ['id', 'user_id', 'workout_log_id', 'exercise_id', 'weight', 'completed', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   body_metrics: ['id', 'user_id', 'date', 'weight', 'notes', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
@@ -224,24 +224,34 @@ export class SyncManager {
       }
 
       if (remoteRecords && remoteRecords.length > 0) {
-        await dexieTable.bulkPut(remoteRecords.map(r => ({ ...r, sync_status: 'synced' })));
-        
-        if (supabaseTableName === 'user_preferences') {
-          const latest = remoteRecords[remoteRecords.length - 1]; // Use most recent if multiple
-          if (latest) {
-            useAppStore.setState({
-              dashboardLayout: latest.dashboard_layout || [],
-              quickNavOrder: latest.quick_nav_order || [],
-              hiddenQuickNav: latest.hidden_quick_nav || [],
-              monitoredHabitId: latest.monitored_habit_id || null
-            });
-            // Update budgie store if there's budgie data
-            if (latest.budgie_food_rotation || latest.budgie_daily_routine) {
-              const { useBudgieStore } = require('@/stores/budgieStore');
-              useBudgieStore.setState({
-                foodRotation: latest.budgie_food_rotation || [],
-                dailyRoutine: latest.budgie_daily_routine || []
+        const localRecords = await dexieTable.filter(r => (!r.user_id || r.user_id === userId)).toArray();
+        const localRecordMap = new Map(localRecords.map(r => [r.id, r]));
+
+        const recordsToPut = remoteRecords.map(r => ({ ...r, sync_status: 'synced' })).filter(r => {
+          const local = localRecordMap.get(r.id);
+          return !local || (local.sync_status !== 'pending' && local.sync_status !== 'local');
+        });
+
+        if (recordsToPut.length > 0) {
+          await dexieTable.bulkPut(recordsToPut);
+          
+          if (supabaseTableName === 'user_preferences') {
+            const latest = recordsToPut[recordsToPut.length - 1]; // Use most recent if multiple
+            if (latest) {
+              useAppStore.setState({
+                dashboardLayout: latest.dashboard_layout || [],
+                quickNavOrder: latest.quick_nav_order || [],
+                hiddenQuickNav: latest.hidden_quick_nav || [],
+                monitoredHabitId: latest.monitored_habit_id || null
               });
+              // Update budgie store if there's budgie data
+              if (latest.budgie_food_rotation || latest.budgie_daily_routine) {
+                const { useBudgieStore } = require('@/stores/budgieStore');
+                useBudgieStore.setState({
+                  foodRotation: latest.budgie_food_rotation || [],
+                  dailyRoutine: latest.budgie_daily_routine || []
+                });
+              }
             }
           }
         }

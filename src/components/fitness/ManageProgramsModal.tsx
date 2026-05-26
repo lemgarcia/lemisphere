@@ -9,6 +9,7 @@ import { X, Plus, Trash2, UploadCloud } from 'lucide-react';
 import styles from '@/app/(app)/fitness/Fitness.module.css';
 import { useAppStore } from '@/stores/appStore';
 import { DeleteConfirmationModal } from '@/components/ui/Modal/DeleteConfirmationModal';
+import { GoalLinkSelector } from '@/components/habits/GoalLinkSelector';
 
 interface ManageProgramsModalProps {
   onClose: () => void;

@@ -195,32 +195,49 @@ export function WorkoutsTab() {
         return l?.completed === true;
       });
       
+      const prevLog = await db.workout_logs.get(logId);
+      const wasCompleted = prevLog?.completed;
+      
       await db.workout_logs.update(logId, { completed: allChecked, updated_at: new Date().toISOString(), sync_status: 'pending' });
-    });
 
-    // Goal link autocomplete — when exercise is checked, mark the linked goal task as done
-    if (newCompletedState) {
-      const exercise = await db.fitness_exercises.get(exerciseId);
-      if (exercise?.linked_goal_id && exercise?.linked_task_id) {
-        const goal = await db.goals.get(exercise.linked_goal_id);
-        if (goal) {
-          // Update milestones — mark linked milestone or task within milestone as completed
-          const updatedMilestones = (goal.milestones || []).map((m: any) => {
-            if (m.id === exercise.linked_milestone_id) return { ...m, completed: true };
-            const updatedMTasks = (m.tasks || []).map((t: any) =>
-              t.id === exercise.linked_task_id ? { ...t, completed: true } : t
-            );
-            return { ...m, tasks: updatedMTasks };
-          });
-          await db.goals.update(goal.id, {
-            milestones: updatedMilestones,
-            updated_at: new Date().toISOString(),
-            sync_status: 'pending'
-          });
-          syncManager.queueSync('goals');
+      // Goal link autocomplete — when the entire day is completed for this set
+      if (allChecked && !wasCompleted) {
+        const dayInfo = await db.fitness_program_days.get(selectedDayId);
+        if (dayInfo?.linked_goal_id) {
+          const goal = await db.goals.get(dayInfo.linked_goal_id);
+          if (goal) {
+            const updatedMilestones = (goal.milestones || []).map((m: any) => {
+              if (m.id === dayInfo.linked_milestone_id && !dayInfo.linked_task_id) {
+                // The milestone itself is linked
+                if (m.target_amount) {
+                  const curr = (m.current_amount || 0) + 1;
+                  return { ...m, current_amount: curr, completed: curr >= m.target_amount };
+                }
+                return { ...m, completed: true };
+              }
+              const updatedMTasks = (m.tasks || []).map((t: any) => {
+                if (t.id === dayInfo.linked_task_id) {
+                  // The task inside the milestone is linked
+                  if (t.target_amount) {
+                    const curr = (t.current_amount || 0) + 1;
+                    return { ...t, current_amount: curr, completed: curr >= t.target_amount };
+                  }
+                  return { ...t, completed: true };
+                }
+                return t;
+              });
+              return { ...m, tasks: updatedMTasks };
+            });
+            await db.goals.update(goal.id, {
+              milestones: updatedMilestones,
+              updated_at: new Date().toISOString(),
+              sync_status: 'pending'
+            });
+            syncManager.queueSync('goals');
+          }
         }
       }
-    }
+    });
 
     syncManager.queueSync('fitness');
   };

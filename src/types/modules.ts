@@ -17,6 +17,13 @@ export interface FitnessProgramDay extends BaseRecord {
   program_id: string;
   name: string; // e.g. "Push Day", "Pull Day"
   order: number; // Order within the week
+
+  // Cross-module linking
+  linked_goal_id?: string;
+  linked_milestone_id?: string;
+  linked_task_id?: string;
+  linked_task_name?: string;
+  sync_direction?: 'one-way' | 'two-way';
 }
 
 export interface FitnessExercise extends BaseRecord {
@@ -27,12 +34,6 @@ export interface FitnessExercise extends BaseRecord {
   rest_sec: number;
   muscle_group?: string;
   order: number;
-  // Cross-module linking (Goals)
-  linked_goal_id?: string;
-  linked_milestone_id?: string;
-  linked_task_id?: string;
-  linked_task_name?: string;
-  sync_direction?: 'one-way' | 'two-way';
 }
 
 export interface WorkoutLog extends BaseRecord {
