@@ -588,7 +588,7 @@ export function SkillsTab() {
                                     linked_milestone_id: milestoneId, 
                                     linked_task_id: taskId, 
                                     linked_task_name: taskName,
-                                    sync_direction: syncDirection || 'two-way'
+                                    sync_direction: syncDirection || 'one-way'
                                   } : i));
                                 }}
                                 onUnlink={() => {

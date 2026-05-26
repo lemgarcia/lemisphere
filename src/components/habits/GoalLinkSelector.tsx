@@ -66,7 +66,7 @@ export function GoalLinkSelector({ item, onLink, onUnlink }: GoalLinkSelectorPro
                 <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Sync Direction:</span>
                 <select 
                   style={{ background: 'var(--canvas-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)', fontSize: '11px', borderRadius: '4px', padding: '2px 4px' }}
-                  value={item.sync_direction || 'two-way'}
+                  value={item.sync_direction || 'one-way'}
                   onChange={(e) => {
                     onLink(item.linked_goal_id!, item.linked_milestone_id, item.linked_task_id, item.linked_task_name, e.target.value as any);
                   }}
@@ -107,7 +107,7 @@ export function GoalLinkSelector({ item, onLink, onUnlink }: GoalLinkSelectorPro
                           <div key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             <button
                               type="button"
-                              onClick={() => { onLink(goal.id, m.id, undefined, m.title, 'two-way'); setIsOpen(false); }}
+                              onClick={() => { onLink(goal.id, m.id, undefined, m.title, 'one-way'); setIsOpen(false); }}
                               style={{ 
                                 textAlign: 'left', background: (item.linked_milestone_id === m.id && !item.linked_task_id) ? 'var(--mod-goals-light)' : 'transparent', 
                                 border: 'none', padding: '4px 6px', borderRadius: '4px', cursor: 'pointer',
@@ -122,7 +122,7 @@ export function GoalLinkSelector({ item, onLink, onUnlink }: GoalLinkSelectorPro
                               <button
                                 key={t.id}
                                 type="button"
-                                onClick={() => { onLink(goal.id, m.id, t.id, t.text, 'two-way'); setIsOpen(false); }}
+                                onClick={() => { onLink(goal.id, m.id, t.id, t.text, 'one-way'); setIsOpen(false); }}
                                 style={{ 
                                   textAlign: 'left', background: item.linked_task_id === t.id ? 'var(--mod-goals-light)' : 'transparent', 
                                   border: 'none', padding: '4px 6px 4px 20px', borderRadius: '4px', cursor: 'pointer',
