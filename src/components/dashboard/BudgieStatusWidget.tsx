@@ -34,13 +34,44 @@ export function BudgieStatusWidget() {
 
   const careEvents = useLiveQuery(
     async () => {
-      if (!activeBirdId) return [];
-      return await db.care_events
+      if (!activeBirdId || !birds) return [];
+      
+      // Find the active bird and its linked bird
+      const activeBird = birds.find(b => b.id === activeBirdId);
+      const linkedBird = activeBird ? birds.find(b => 
+        b.id === activeBird.linked_bird_id || 
+        (b.linked_bird_id === activeBird.id && b.id !== activeBird.id)
+      ) : null;
+      
+      // Query events for the active bird
+      const events = await db.care_events
         .where({ bird_id: activeBirdId, date: todayStr })
         .filter(x => x.user_id === userId)
         .toArray();
+      
+      // If linked, also get events for the linked bird and merge (deduplicate by type+time)
+      if (linkedBird) {
+        const linkedEvents = await db.care_events
+          .where({ bird_id: linkedBird.id, date: todayStr })
+          .filter(x => x.user_id === userId)
+          .toArray();
+        
+        const existingKeys = new Set(events.map(e => `${e.type}|${e.time || ''}|${e.notes || ''}`));
+        for (const le of linkedEvents) {
+          const key = `${le.type}|${le.time || ''}|${le.notes || ''}`;
+          if (!existingKeys.has(key)) {
+            events.push(le);
+            existingKeys.add(key);
+          }
+        }
+        
+        // Sort by created_at so they appear in the same sequence
+        events.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      }
+      
+      return events;
     },
-    [activeBirdId, userId, todayStr]
+    [activeBirdId, userId, todayStr, birds]
   );
 
   // Removed toggleEvent as CareEvents are inherently logs of completed actions
