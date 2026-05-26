@@ -13,6 +13,16 @@ import { DeleteConfirmationModal } from '@/components/ui/Modal/DeleteConfirmatio
 
 const ALL_EMOJIS = ['🎯','🏃','🏋️','📖','💻','🎨','🎵','🎮','💰','🧘','🥗','✍️','🧠','💼','🪴','🔨','✈️','🏆'];
 
+const getDifficultyColor = (diff?: string) => {
+  switch (diff) {
+    case 'easy': return 'rgba(16, 185, 129, 0.3)';
+    case 'mid': return 'rgba(59, 130, 246, 0.3)';
+    case 'hard': return 'rgba(245, 158, 11, 0.3)';
+    case 'extreme': return 'rgba(239, 68, 68, 0.3)';
+    default: return 'var(--mod-goals-light)';
+  }
+};
+
 export function GoalsDashboard() {
   const goals = useLiveQuery(() => db.goals.filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray());
   const skills = useLiveQuery(() => db.skills.filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray());
@@ -448,7 +458,7 @@ function GoalCard({ goal, skills, onEdit, onDelete }: { goal: Goal, skills: any[
                   return (
                     <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '4px', padding: '2px 6px', flex: 1, display: 'flex', alignItems: 'center' }}>
                       {linkedSkillItem && (
-                        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${Math.min(100, Math.max(0, linkedProgress))}%`, background: 'var(--mod-goals-light)', zIndex: 0, transition: 'width 0.3s ease' }} />
+                        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${Math.min(100, Math.max(0, linkedProgress))}%`, background: getDifficultyColor(linkedSkillItem.difficulty), zIndex: 0, transition: 'width 0.3s ease' }} />
                       )}
                       <span style={{ position: 'relative', zIndex: 1, fontSize: '14px', fontWeight: 600, textDecoration: milestone.completed ? 'line-through' : 'none', color: milestone.completed ? 'var(--text-tertiary)' : 'var(--text-primary)' }}>
                         {milestone.title} {linkedSkillItem?.target_amount ? `(${linkedSkillItem.current_amount || 0}/${linkedSkillItem.target_amount})` : ''}
@@ -528,7 +538,7 @@ function GoalCard({ goal, skills, onEdit, onDelete }: { goal: Goal, skills: any[
                         return (
                           <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '4px', padding: '2px 6px', flex: 1, display: 'flex', alignItems: 'center' }}>
                             {linkedSkillItem && (
-                              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${Math.min(100, Math.max(0, linkedProgress))}%`, background: 'var(--mod-goals-light)', zIndex: 0, transition: 'width 0.3s ease' }} />
+                              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${Math.min(100, Math.max(0, linkedProgress))}%`, background: getDifficultyColor(linkedSkillItem.difficulty), zIndex: 0, transition: 'width 0.3s ease' }} />
                             )}
                             <span style={{ position: 'relative', zIndex: 1, fontSize: '13px', textDecoration: task.completed ? 'line-through' : 'none', color: task.completed ? 'var(--text-tertiary)' : 'var(--text-secondary)' }}>
                               {task.text} {linkedSkillItem?.target_amount ? `(${linkedSkillItem.current_amount || 0}/${linkedSkillItem.target_amount})` : ''}
