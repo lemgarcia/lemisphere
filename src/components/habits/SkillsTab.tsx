@@ -62,7 +62,7 @@ interface SortableSkillCardProps {
   skill: Skill;
   onEdit: (skill: Skill) => void;
   onDelete: (id: string) => void;
-  onToggleChecklist: (skillId: string, itemId: string, completed: boolean) => void;
+  onToggleChecklist: (skillId: string, itemId: string, completed: boolean, current_amount?: number) => void;
 }
 
 function SortableSkillCard({ skill, onEdit, onDelete, onToggleChecklist }: SortableSkillCardProps) {
@@ -119,19 +119,55 @@ function SortableSkillCard({ skill, onEdit, onDelete, onToggleChecklist }: Sorta
           <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tasks</div>
           {skill.checklist.map(item => (
             <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-              <div 
-                className={`${styles.checkboxBtn} ${item.completed ? styles.completed : ''}`}
-                style={{ width: '20px', height: '20px', borderRadius: '4px', flexShrink: 0, marginTop: '2px' }}
-                onClick={() => onToggleChecklist(skill.id, item.id, !item.completed)}
-              >
-                {item.completed && <Check size={12} strokeWidth={3} />}
-              </div>
+              {item.target_amount ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--canvas-bg)', padding: '2px', borderRadius: '6px', border: '1px solid var(--card-border)', marginTop: '2px' }}>
+                  <button 
+                    type="button" 
+                    style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '4px', cursor: 'pointer' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const current = item.current_amount || 0;
+                      if (current > 0) {
+                        const newAmount = current - 1;
+                        onToggleChecklist(skill.id, item.id, newAmount >= item.target_amount!, newAmount);
+                      }
+                    }}
+                  >
+                    -
+                  </button>
+                  <span style={{ fontSize: '11px', fontWeight: 600, minWidth: '32px', textAlign: 'center' }}>
+                    {item.current_amount || 0} / {item.target_amount}
+                  </span>
+                  <button 
+                    type="button" 
+                    style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '4px', cursor: 'pointer' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const current = item.current_amount || 0;
+                      if (current < item.target_amount!) {
+                        const newAmount = current + 1;
+                        onToggleChecklist(skill.id, item.id, newAmount >= item.target_amount!, newAmount);
+                      }
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+              ) : (
+                <div 
+                  className={`${styles.checkboxBtn} ${item.completed ? styles.completed : ''}`}
+                  style={{ width: '20px', height: '20px', borderRadius: '4px', flexShrink: 0, marginTop: '2px' }}
+                  onClick={() => onToggleChecklist(skill.id, item.id, !item.completed)}
+                >
+                  {item.completed && <Check size={12} strokeWidth={3} />}
+                </div>
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <span style={{ fontSize: '14px', color: item.completed ? 'var(--text-tertiary)' : 'var(--text-primary)', textDecoration: item.completed ? 'line-through' : 'none' }}>
                   {item.text} {item.repeats && item.repeats > 1 ? `(x${item.repeats})` : ''}
                 </span>
                 <span className={`${styles.difficultyBadge} ${getDiffClass(item.difficulty || 'easy')}`} style={{ alignSelf: 'flex-start' }}>
-                  {item.difficulty || 'easy'} ({getDiffXpNum(item.difficulty || 'easy') * (item.repeats || 1)} XP)
+                  {item.difficulty || 'easy'} ({getDiffXpNum(item.difficulty || 'easy') * (item.repeats || 1)} XP{item.target_amount ? ' per rep' : ''})
                 </span>
               </div>
             </div>
@@ -164,7 +200,7 @@ export function SkillsTab() {
   const [tempChecklist, setTempChecklist] = useState<ChecklistItem[]>([]);
   const [newItemText, setNewItemText] = useState('');
   const [newItemDifficulty, setNewItemDifficulty] = useState<TaskDifficulty>('easy');
-  const [newItemRepeats, setNewItemRepeats] = useState<number>(1);
+  const [newItemTarget, setNewTargetAmount] = useState<number | ''>('');
 
   const skillsRaw = useLiveQuery(() => db.skills.filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray());
   const skills = useMemo(() => {
@@ -198,30 +234,39 @@ export function SkillsTab() {
 
   const handleAddChecklistItem = () => {
     if (!newItemText.trim()) return;
-    setTempChecklist([...tempChecklist, { id: generateId(), text: newItemText.trim(), completed: false, difficulty: newItemDifficulty, repeats: newItemRepeats }]);
+    setTempChecklist([...tempChecklist, { id: generateId(), text: newItemText.trim(), completed: false, difficulty: newItemDifficulty, target_amount: newItemTarget || undefined, current_amount: newItemTarget ? 0 : undefined }]);
     setNewItemText('');
-    setNewItemRepeats(1);
+    setNewTargetAmount('');
   };
 
   const handleRemoveChecklistItem = (id: string) => {
     setTempChecklist(tempChecklist.filter(i => i.id !== id));
   };
 
-  const handleToggleChecklist = async (skillId: string, itemId: string, completed: boolean) => {
+  const handleToggleChecklist = async (skillId: string, itemId: string, completed: boolean, current_amount?: number) => {
     const skill = await db.skills.get(skillId);
     if (!skill) return;
     
-    const updatedChecklist = skill.checklist?.map(item => 
-      item.id === itemId ? { ...item, completed } : item
-    ) || [];
-
-    // Automatically update XP based on difficulty
     const task = skill.checklist?.find(i => i.id === itemId);
-    const xpDelta = task ? (difficultyMap[task.difficulty || 'easy'] || 10) * (task.repeats || 1) : 10;
+    const xpPerClick = task ? (difficultyMap[task.difficulty || 'easy'] || 10) * (task.repeats || 1) : 10;
+    
+    let xpDelta = 0;
+    
+    const updatedChecklist = skill.checklist?.map(item => {
+      if (item.id === itemId) {
+        if (current_amount !== undefined) {
+          const oldAmount = item.current_amount || 0;
+          xpDelta = (current_amount - oldAmount) * xpPerClick;
+          return { ...item, completed, current_amount };
+        } else {
+          xpDelta = completed ? xpPerClick : -xpPerClick;
+          return { ...item, completed };
+        }
+      }
+      return item;
+    }) || [];
 
-    let newXp = skill.xp;
-    if (completed) newXp += xpDelta;
-    else newXp = Math.max(0, newXp - xpDelta);
+    let newXp = Math.max(0, skill.xp + xpDelta);
     
     const bracket = getSkillBracket(newXp);
 
@@ -439,11 +484,11 @@ export function SkillsTab() {
                   <input
                     type="number"
                     min="1"
+                    placeholder="Target (opt)"
                     className={styles.input}
-                    style={{ width: '70px' }}
-                    value={newItemRepeats}
-                    onChange={e => setNewItemRepeats(Math.max(1, parseInt(e.target.value) || 1))}
-                    title="Repeats (Multiplier)"
+                    style={{ width: '90px' }}
+                    value={newItemTarget}
+                    onChange={e => setNewTargetAmount(Number(e.target.value) || '')}
                   />
                   <button type="button" className={styles.primaryButton} onClick={handleAddChecklistItem}><Plus size={16}/></button>
                 </div>
@@ -458,10 +503,10 @@ export function SkillsTab() {
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontSize: '14px', textDecoration: item.completed ? 'line-through' : 'none' }}>
-                              {item.text} {item.repeats && item.repeats > 1 ? `(x${item.repeats})` : ''}
+                              {item.text}
                             </span>
-                            <span className={`${styles.difficultyBadge} ${getDiffClass(item.difficulty || 'easy')}`} style={{ alignSelf: 'flex-start', fontSize: '9px', padding: '1px 4px', marginTop: '2px' }}>
-                              {item.difficulty || 'easy'} ({getDiffXpNum(item.difficulty || 'easy') * (item.repeats || 1)} XP)
+                            <span className={`${styles.difficultyBadge} ${getDiffClass(item.difficulty || 'easy')}`}>
+                              {item.difficulty || 'easy'} ({getDiffXpNum(item.difficulty || 'easy')} XP{item.target_amount ? ` × ${item.target_amount} Target` : ''})
                             </span>
                           </div>
                         </div>

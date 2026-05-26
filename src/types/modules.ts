@@ -213,7 +213,9 @@ export interface ChecklistItem {
   text: string;
   completed: boolean;
   difficulty: TaskDifficulty;
-  repeats?: number;
+  repeats?: number; // legacy/multiplier
+  target_amount?: number;
+  current_amount?: number;
 }
 
 export interface Skill extends BaseRecord {
