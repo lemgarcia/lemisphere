@@ -167,7 +167,7 @@ function SortableSkillCard({ skill, onEdit, onDelete, onToggleChecklist }: Sorta
                   {item.text} {item.repeats && item.repeats > 1 ? `(x${item.repeats})` : ''}
                 </span>
                 <span className={`${styles.difficultyBadge} ${getDiffClass(item.difficulty || 'easy')}`} style={{ alignSelf: 'flex-start' }}>
-                  {item.difficulty || 'easy'} ({getDiffXpNum(item.difficulty || 'easy') * (item.repeats || 1)} XP{item.target_amount ? ' per rep' : ''})
+                  {item.difficulty || 'easy'} ({item.target_amount ? getDiffXpNum(item.difficulty || 'easy') * item.target_amount : getDiffXpNum(item.difficulty || 'easy') * (item.repeats || 1)} XP)
                 </span>
               </div>
             </div>
@@ -241,6 +241,14 @@ export function SkillsTab() {
 
   const handleRemoveChecklistItem = (id: string) => {
     setTempChecklist(tempChecklist.filter(i => i.id !== id));
+  };
+
+  const handleEditChecklistText = (id: string, text: string) => {
+    setTempChecklist(tempChecklist.map(i => i.id === id ? { ...i, text } : i));
+  };
+
+  const handleEditChecklistTarget = (id: string, target_amount: number | undefined) => {
+    setTempChecklist(tempChecklist.map(i => i.id === id ? { ...i, target_amount, current_amount: target_amount ? 0 : undefined } : i));
   };
 
   const handleToggleChecklist = async (skillId: string, itemId: string, completed: boolean, current_amount?: number) => {
@@ -497,21 +505,37 @@ export function SkillsTab() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
                     {tempChecklist.map(item => (
                       <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-secondary)', padding: '8px 12px', borderRadius: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div className={`${styles.checkboxBtn} ${item.completed ? styles.completed : ''}`} style={{ width: '18px', height: '18px', borderRadius: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                          <div className={`${styles.checkboxBtn} ${item.completed ? styles.completed : ''}`} style={{ width: '18px', height: '18px', borderRadius: '4px', flexShrink: 0 }}>
                             {item.completed && <Check size={10} strokeWidth={3} />}
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontSize: '14px', textDecoration: item.completed ? 'line-through' : 'none' }}>
-                              {item.text}
-                            </span>
-                            <span className={`${styles.difficultyBadge} ${getDiffClass(item.difficulty || 'easy')}`}>
-                              {item.difficulty || 'easy'} ({getDiffXpNum(item.difficulty || 'easy')} XP{item.target_amount ? ` × ${item.target_amount} Target` : ''})
-                            </span>
+                          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '4px' }}>
+                            <input 
+                              className={styles.input}
+                              style={{ padding: '4px 8px', fontSize: '13px' }}
+                              value={item.text}
+                              onChange={e => handleEditChecklistText(item.id, e.target.value)}
+                            />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span className={`${styles.difficultyBadge} ${getDiffClass(item.difficulty || 'easy')}`}>
+                                {item.difficulty || 'easy'} ({item.target_amount ? getDiffXpNum(item.difficulty || 'easy') * item.target_amount : getDiffXpNum(item.difficulty || 'easy') * (item.repeats || 1)} XP)
+                              </span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Target:</span>
+                                <input 
+                                  type="number"
+                                  min="0"
+                                  className={styles.input}
+                                  style={{ width: '50px', padding: '2px 4px', fontSize: '11px' }}
+                                  value={item.target_amount || ''}
+                                  onChange={e => handleEditChecklistTarget(item.id, Number(e.target.value) || undefined)}
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <button type="button" onClick={() => handleRemoveChecklistItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}>
-                          <X size={14} />
+                        <button type="button" onClick={() => handleRemoveChecklistItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '4px', marginLeft: '8px' }}>
+                          <X size={16} />
                         </button>
                       </div>
                     ))}
