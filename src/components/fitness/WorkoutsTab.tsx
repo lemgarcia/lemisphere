@@ -298,32 +298,6 @@ export function WorkoutsTab() {
     syncManager.queueSync('fitness');
   };
 
-  const handleLinkExerciseToGoal = async (exerciseId: string, goalId: string | undefined, milestoneId: string | undefined, taskId: string | undefined, taskName: string | undefined, syncDir: 'one-way' | 'two-way') => {
-    await db.fitness_exercises.update(exerciseId, {
-      linked_goal_id: goalId,
-      linked_milestone_id: milestoneId,
-      linked_task_id: taskId,
-      linked_task_name: taskName,
-      sync_direction: syncDir,
-      updated_at: new Date().toISOString(),
-      sync_status: 'pending'
-    });
-    syncManager.queueSync('fitness');
-  };
-
-  const handleUnlinkExercise = async (exerciseId: string) => {
-    await db.fitness_exercises.update(exerciseId, {
-      linked_goal_id: undefined,
-      linked_milestone_id: undefined,
-      linked_task_id: undefined,
-      linked_task_name: undefined,
-      sync_direction: undefined,
-      updated_at: new Date().toISOString(),
-      sync_status: 'pending'
-    });
-    syncManager.queueSync('fitness');
-  };
-
   if (!activeProgram) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
@@ -518,7 +492,6 @@ export function WorkoutsTab() {
               <th style={{ width: '100px', textAlign: 'center' }}>Target Reps</th>
               <th style={{ width: '100px', textAlign: 'center' }}>Rest (secs)</th>
               <th style={{ width: '100px', textAlign: 'center' }}>Weight</th>
-              <th style={{ width: '60px', textAlign: 'center' }}>Goal</th>
             </tr>
           </thead>
           <tbody>
@@ -572,23 +545,6 @@ export function WorkoutsTab() {
                         placeholder="e.g. 7.5 or BW"
                         className={styles.exTableInput}
                         style={{ textAlign: 'center', width: '80px', opacity: isChecked ? 0.5 : 1, transition: 'opacity 0.3s' }}
-                      />
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <GoalLinkSelector
-                        item={{
-                          id: ex.id,
-                          text: ex.name,
-                          completed: isChecked,
-                          difficulty: 'mid',
-                          linked_goal_id: ex.linked_goal_id,
-                          linked_milestone_id: ex.linked_milestone_id,
-                          linked_task_id: ex.linked_task_id,
-                          linked_task_name: ex.linked_task_name,
-                          sync_direction: ex.sync_direction,
-                        }}
-                        onLink={(goalId, milestoneId, taskId, taskName, syncDir) => handleLinkExerciseToGoal(ex.id, goalId, milestoneId, taskId, taskName, syncDir || 'one-way')}
-                        onUnlink={() => handleUnlinkExercise(ex.id)}
                       />
                     </td>
                   </motion.tr>
