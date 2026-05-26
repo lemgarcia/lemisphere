@@ -133,7 +133,7 @@ export function WorkoutsTab() {
 
     let newCompletedState = false;
 
-    await db.transaction('rw', db.workout_logs, db.workout_exercise_logs, db.fitness_exercises, async () => {
+    await db.transaction('rw', [db.workout_logs, db.workout_exercise_logs, db.fitness_exercises, db.fitness_program_days, db.goals], async () => {
       let existingLog = await db.workout_logs
         .filter(l => l.program_id === activeProgram.id && l.program_day_id === selectedDayId && l.set_number === selectedSet)
         .first();
@@ -516,7 +516,7 @@ export function WorkoutsTab() {
               {filteredExercises.map(ex => {
                 const log = exerciseLogs?.find(l => l.exercise_id === ex.id);
                 const isChecked = log?.completed || false;
-                const currentWeight = log?.weight || (previousWeights && previousWeights[ex.id]) || 0;
+                const currentWeight = log ? (log.weight ?? '') : (previousWeights?.[ex.id] ?? '');
 
                 return (
                   <motion.tr 
