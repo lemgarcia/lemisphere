@@ -202,16 +202,18 @@ export function ProfileTab() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            style={{ animation: 'none', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
           >
             <motion.div 
               className={styles.modalContent} 
               onClick={e => e.stopPropagation()} 
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              exit={{ scale: 0.97, opacity: 0, y: 10 }}
+              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
               style={{ 
+                animation: 'none',
                 maxWidth: '420px', 
                 textAlign: 'center', 
                 position: 'relative',
