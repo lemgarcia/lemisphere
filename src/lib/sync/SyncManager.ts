@@ -43,7 +43,7 @@ const ALLOWED_COLUMNS_PER_TABLE: Record<string, string[]> = {
   
   habits: ['id', 'user_id', 'name', 'description', 'icon', 'color', 'frequency', 'frequency_days', 'target_count', 'category', 'is_active', 'streak_current', 'streak_best', 'sort_order', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   habit_completions: ['id', 'user_id', 'habit_id', 'date', 'count', 'notes', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
-  skills: ['id', 'user_id', 'name', 'category', 'level', 'xp', 'notes', 'description', 'status', 'checklist', 'icon', 'sort_order', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
+  skills: ['id', 'user_id', 'name', 'category', 'level', 'xp', 'notes', 'description', 'status', 'checklist', 'links', 'icon', 'sort_order', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   skill_entries: ['id', 'user_id', 'skill_id', 'date', 'xp_gained', 'notes', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   
   goals: ['id', 'user_id', 'title', 'description', 'category', 'status', 'progress', 'is_auto_progress', 'target_date', 'milestones', 'icon', 'color', 'reward', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
