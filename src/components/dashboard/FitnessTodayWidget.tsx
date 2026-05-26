@@ -50,7 +50,9 @@ export function FitnessTodayWidget() {
     
     if (!nextDay) nextDay = days[0]; // If set is complete but not advanced yet
 
-    return { program: activeProgram, status: 'pending' as const, day: nextDay };
+    const dayNumber = completedDayIds.size + 1;
+
+    return { program: activeProgram, status: 'pending' as const, day: nextDay, dayNumber };
   }, [userId]);
 
   return (
@@ -84,7 +86,7 @@ export function FitnessTodayWidget() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: 'var(--canvas-bg)', borderRadius: '8px', border: '1px solid var(--card-border)' }}>
               <div>
                 <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>{fitnessData.day.name}</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Day {fitnessData.day.order + 1}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Day {fitnessData.dayNumber}</div>
               </div>
               <Link href="/fitness" style={{ padding: '6px 12px', background: 'var(--accent-violet)', color: '#fff', fontSize: '12px', fontWeight: 600, borderRadius: '6px', textDecoration: 'none' }}>
                 Start

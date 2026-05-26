@@ -7,7 +7,7 @@ import { db } from '@/lib/db';
 import styles from '@/app/(app)/dashboard/Dashboard.module.css';
 import { useAppStore } from '@/stores/appStore';
 import { useCurrentDay } from '@/hooks/useCurrentDay';
-import { CheckCircle2, Circle, Droplets, Utensils, Scale, Stethoscope, Pill, Bath, Scissors, Heart } from 'lucide-react';
+import { CheckCircle2, Circle, Droplets, Utensils, Scale, Stethoscope, Pill, Bath, Scissors, Heart, Carrot } from 'lucide-react';
 
 const CARE_TYPES: Record<string, { label: string; icon: any; color: string }> = {
   'feeding': { label: 'Feeding', icon: Utensils, color: '#f59e0b' },
@@ -113,7 +113,9 @@ export function BudgieStatusWidget() {
         ) : (
           careEvents.map((event: any) => {
             const typeInfo = CARE_TYPES[event.type] || { label: event.type, icon: Circle, color: 'var(--accent-violet)' };
-            const Icon = typeInfo.icon;
+            const Icon = event.food_type && event.type === 'feeding' && event.food_type.toLowerCase().includes('veggi') ? Carrot : typeInfo.icon;
+            const displayLabel = event.food_type || typeInfo.label;
+            const iconColor = event.food_type && event.type === 'feeding' && event.food_type.toLowerCase().includes('veggi') ? '#22c55e' : typeInfo.color;
             
             return (
               <div 
@@ -127,14 +129,14 @@ export function BudgieStatusWidget() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ 
                     width: '32px', height: '32px', borderRadius: '50%', 
-                    background: `${typeInfo.color}20`, color: typeInfo.color,
+                    background: `${iconColor}20`, color: iconColor,
                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                   }}>
                     <Icon size={16} />
                   </div>
                   <div>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                      {typeInfo.label}
+                      {displayLabel}
                     </div>
                     {event.time && <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{event.time}</div>}
                   </div>
