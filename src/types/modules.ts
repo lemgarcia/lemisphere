@@ -295,4 +295,5 @@ export interface UserPreferences extends BaseRecord {
   hidden_quick_nav: string[];
   budgie_food_rotation?: any[];
   budgie_daily_routine?: any[];
+  monitored_habit_id?: string;
 }

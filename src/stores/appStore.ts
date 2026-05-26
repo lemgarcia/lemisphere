@@ -25,6 +25,7 @@ const pushPreferencesToDexie = async (state: AppState) => {
     dashboard_layout: state.dashboardLayout,
     quick_nav_order: state.quickNavOrder,
     hidden_quick_nav: state.hiddenQuickNav,
+    monitored_habit_id: state.monitoredHabitId,
     sync_status: 'pending',
     created_at: existing?.created_at || new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -51,6 +52,7 @@ interface AppState {
   quickNavOrder: string[];
   hiddenQuickNav: string[];
   showTodoBubble: boolean;
+  monitoredHabitId: string | null;
 
   // ── Sync ─────────────────────────────────────────────────────────────────
   sync: SyncState;
@@ -69,6 +71,7 @@ interface AppActions {
   setQuickNavOrder: (order: string[]) => void;
   toggleQuickNavVisibility: (key: string) => void;
   setShowTodoBubble: (show: boolean) => void;
+  setMonitoredHabitId: (id: string | null) => void;
   setSyncState: (sync: Partial<SyncState>) => void;
   setUser: (userId: string | null, username: string | null) => void;
   setProfilePicture: (pic: string | null) => void;
@@ -105,6 +108,7 @@ export const useAppStore = create<AppState & AppActions>()(
         quickNavOrder: ['budgie', 'fitness', 'goals', 'habits', 'gaming'],
         hiddenQuickNav: [],
         showTodoBubble: false,
+        monitoredHabitId: null,
         commandPaletteOpen: false,
         sync: {
           isOnline: true,
@@ -153,6 +157,11 @@ export const useAppStore = create<AppState & AppActions>()(
 
         setShowTodoBubble: (show) =>
           set((state) => { state.showTodoBubble = show; }),
+
+        setMonitoredHabitId: (id) => {
+          set((state) => { state.monitoredHabitId = id; });
+          pushPreferencesToDexie(get());
+        },
 
         setSyncState: (sync) =>
           set((state) => { state.sync = { ...state.sync, ...sync }; }),
