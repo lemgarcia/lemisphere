@@ -13,7 +13,7 @@ export function GoalProgressWidget() {
 
   const activeGoals = useLiveQuery(async () => {
     return await db.goals
-      .filter(g => g.status === 'in-progress' && g.user_id === userId)
+      .filter(g => g.status === 'active' && g.user_id === userId)
       .limit(3)
       .toArray();
   }, [userId]);
