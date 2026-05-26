@@ -103,10 +103,10 @@ export function StatsTab() {
           <div style={{ flex: 1, minWidth: '150px' }}>
             <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: '8px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Weight (kg)</label>
             <input 
-              type="number" 
+              type="text" 
               value={weightInput} 
               onChange={e => setWeightInput(e.target.value)} 
-              placeholder="e.g. 75.5"
+              placeholder="e.g. 75.5 or BW"
               style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--card-border)', background: 'var(--card-bg)', color: 'var(--text-primary)', outline: 'none', transition: 'all 0.2s', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}
               onFocus={(e) => e.target.style.borderColor = 'var(--accent-violet)'}
               onBlur={(e) => e.target.style.borderColor = 'var(--card-border)'}
