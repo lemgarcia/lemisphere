@@ -257,6 +257,8 @@ export interface Milestone {
   due_date?: string;
   tasks?: GoalTask[];
   reward?: string;
+  target_amount?: number;
+  current_amount?: number;
 }
 
 export interface Goal extends BaseRecord {

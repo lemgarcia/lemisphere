@@ -172,10 +172,15 @@ function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, 
     checkAutoCompletion(updatedMilestones);
   };
 
-  const handleToggleMilestone = async (milestoneId: string, completed: boolean) => {
+  const handleToggleMilestone = async (milestoneId: string, completed: boolean, current_amount?: number) => {
     const updatedMilestones = goal.milestones.map(m => {
       if (m.id === milestoneId) {
-        return { ...m, completed, tasks: m.tasks?.map(t => ({ ...t, completed })) }; // auto-complete subtasks
+        return { 
+          ...m, 
+          completed, 
+          current_amount: current_amount !== undefined ? current_amount : m.current_amount,
+          tasks: m.tasks?.map(t => ({ ...t, completed })) // auto-complete subtasks
+        }; 
       }
       return m;
     });
@@ -296,12 +301,49 @@ function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, 
           {goal.milestones.map(milestone => (
             <div key={milestone.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div 
-                  className={`${styles.checkbox} ${milestone.completed ? styles.checked : ''}`}
-                  onClick={(e) => { e.stopPropagation(); handleToggleMilestone(milestone.id, !milestone.completed); }}
-                >
-                  {milestone.completed && <CheckCircle size={14} />}
-                </div>
+                {milestone.target_amount ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--bg-secondary)', padding: '2px', borderRadius: '6px', border: '1px solid var(--card-border)' }}>
+                    <button 
+                      type="button" 
+                      style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '4px', cursor: 'pointer' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const current = milestone.current_amount || 0;
+                        if (current > 0) {
+                          const newAmount = current - 1;
+                          handleToggleMilestone(milestone.id, newAmount >= milestone.target_amount!, newAmount);
+                        }
+                      }}
+                    >
+                      -
+                    </button>
+                    <span style={{ fontSize: '12px', fontWeight: 600, minWidth: '32px', textAlign: 'center' }}>
+                      {milestone.current_amount || 0} / {milestone.target_amount}
+                    </span>
+                    <button 
+                      type="button" 
+                      style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '4px', cursor: 'pointer' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const current = milestone.current_amount || 0;
+                        if (current < milestone.target_amount!) {
+                          const newAmount = current + 1;
+                          handleToggleMilestone(milestone.id, newAmount >= milestone.target_amount!, newAmount);
+                        }
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : (
+                  <div 
+                    className={`${styles.checkbox} ${milestone.completed ? styles.checked : ''}`}
+                    onClick={(e) => { e.stopPropagation(); handleToggleMilestone(milestone.id, !milestone.completed); }}
+                  >
+                    {milestone.completed && <CheckCircle size={14} />}
+                  </div>
+                )}
+                
                 <span style={{ fontSize: '14px', fontWeight: 600, textDecoration: milestone.completed ? 'line-through' : 'none', color: milestone.completed ? 'var(--text-tertiary)' : 'var(--text-primary)' }}>
                   {milestone.title}
                 </span>
@@ -407,6 +449,7 @@ function GoalModal({ goal, onClose }: { goal: Goal | null, onClose: () => void }
   const [milestones, setMilestones] = useState<Milestone[]>(goal?.milestones || []);
 
   const [newMilestoneTitle, setNewMilestoneTitle] = useState('');
+  const [newMilestoneTarget, setNewMilestoneTarget] = useState<number | ''>('');
 
   const handleAddMilestone = () => {
     if (!newMilestoneTitle.trim()) return;
@@ -414,9 +457,12 @@ function GoalModal({ goal, onClose }: { goal: Goal | null, onClose: () => void }
       id: generateId(),
       title: newMilestoneTitle.trim(),
       completed: false,
-      tasks: []
+      tasks: [],
+      target_amount: newMilestoneTarget || undefined,
+      current_amount: newMilestoneTarget ? 0 : undefined
     }]);
     setNewMilestoneTitle('');
+    setNewMilestoneTarget('');
   };
 
   const handleRemoveMilestone = (id: string) => {
@@ -600,6 +646,16 @@ function GoalModal({ goal, onClose }: { goal: Goal | null, onClose: () => void }
                   onChange={e => setNewMilestoneTitle(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddMilestone(); } }}
                 />
+                <input 
+                  type="number"
+                  min="1"
+                  placeholder="Target (opt)"
+                  className={styles.input}
+                  style={{ width: '90px' }}
+                  value={newMilestoneTarget}
+                  onChange={e => setNewMilestoneTarget(Number(e.target.value) || '')}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddMilestone(); } }}
+                />
                 <button type="button" className={styles.primaryButton} onClick={handleAddMilestone}><Plus size={16}/></button>
               </div>
 
@@ -613,6 +669,7 @@ function GoalModal({ goal, onClose }: { goal: Goal | null, onClose: () => void }
                     onTitleChange={(val) => handleMilestoneTitleChange(milestone.id, val)}
                     onTaskTextChange={(taskId, val) => handleTaskTextChange(milestone.id, taskId, val)}
                     onTaskTargetChange={(taskId, val) => setMilestones(milestones.map(m => m.id === milestone.id ? { ...m, tasks: m.tasks?.map(t => t.id === taskId ? { ...t, target_amount: val || undefined } : t) } : m))}
+                    onTargetChange={(val) => setMilestones(milestones.map(m => m.id === milestone.id ? { ...m, target_amount: val || undefined } : m))}
                   />
               )}
             </div>
@@ -631,28 +688,39 @@ function GoalModal({ goal, onClose }: { goal: Goal | null, onClose: () => void }
   );
 }
 
-function MilestoneEditor({ milestone, onRemove, onRewardChange, onAddTask, onRemoveTask, onTitleChange, onTaskTextChange, onTaskTargetChange }: { milestone: Milestone, onRemove: () => void, onRewardChange: (val: string) => void, onAddTask: (text: string, target?: number) => void, onRemoveTask: (taskId: string) => void, onTitleChange: (val: string) => void, onTaskTextChange: (taskId: string, val: string) => void, onTaskTargetChange: (taskId: string, val: number) => void }) {
+function MilestoneEditor({ milestone, onRemove, onRewardChange, onAddTask, onRemoveTask, onTitleChange, onTaskTextChange, onTaskTargetChange, onTargetChange }: { milestone: Milestone, onRemove: () => void, onRewardChange: (val: string) => void, onAddTask: (text: string, target?: number) => void, onRemoveTask: (taskId: string) => void, onTitleChange: (val: string) => void, onTaskTextChange: (taskId: string, val: string) => void, onTaskTargetChange: (taskId: string, val: number) => void, onTargetChange: (val: number) => void }) {
   const [newTask, setNewTask] = useState('');
   const [newTarget, setNewTarget] = useState<number | ''>('');
 
   return (
     <div className={styles.milestoneItem}>
-      <div className={styles.milestoneHeader}>
+      <div className={styles.milestoneHeader} style={{ alignItems: 'center' }}>
         <input 
           className={styles.input} 
-          style={{ fontWeight: 600, flex: 1, padding: '4px 8px', background: 'transparent', border: '1px dashed transparent' }} 
+          style={{ fontWeight: 600, flex: 1, padding: '6px 12px', fontSize: '15px' }} 
           value={milestone.title}
           onChange={e => onTitleChange(e.target.value)}
           placeholder="Milestone Title"
         />
-        <button type="button" onClick={onRemove} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}><X size={16}/></button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px' }}>
+          <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Target:</span>
+          <input 
+            type="number" 
+            min="0"
+            className={styles.input}
+            style={{ width: '60px', padding: '6px 8px', fontSize: '13px' }}
+            value={milestone.target_amount || ''}
+            onChange={e => onTargetChange(Number(e.target.value))}
+          />
+        </div>
+        <button type="button" onClick={onRemove} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '8px' }}><X size={18}/></button>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', marginTop: '8px' }}>
         <Gift size={14} color="#10b981" />
         <input 
           className={styles.input} 
-          style={{ flex: 1, padding: '4px 8px', fontSize: '12px', background: 'transparent', border: '1px dashed var(--card-border)' }} 
+          style={{ flex: 1, padding: '6px 10px', fontSize: '13px' }} 
           placeholder="Mini-reward (optional)" 
           value={milestone.reward || ''}
           onChange={e => onRewardChange(e.target.value)}
@@ -662,10 +730,10 @@ function MilestoneEditor({ milestone, onRemove, onRewardChange, onAddTask, onRem
       {milestone.tasks && milestone.tasks.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {milestone.tasks.map(task => (
-            <div key={task.id} className={styles.taskItem}>
+            <div key={task.id} className={styles.taskItem} style={{ background: 'var(--bg-secondary)', padding: '8px', borderRadius: '8px', border: '1px solid var(--card-border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <input 
                 className={styles.input} 
-                style={{ flex: 1, fontSize: '13px', padding: '4px 8px', background: 'transparent', border: '1px dashed transparent' }} 
+                style={{ flex: 1, fontSize: '13px', padding: '6px 10px' }} 
                 value={task.text}
                 onChange={e => onTaskTextChange(task.id, e.target.value)}
                 placeholder="Task description"
@@ -676,12 +744,12 @@ function MilestoneEditor({ milestone, onRemove, onRewardChange, onAddTask, onRem
                   type="number" 
                   min="0"
                   className={styles.input}
-                  style={{ width: '40px', padding: '2px 4px', fontSize: '11px', background: 'transparent', border: '1px dashed transparent' }}
+                  style={{ width: '60px', padding: '4px 8px', fontSize: '12px' }}
                   value={task.target_amount || ''}
                   onChange={e => onTaskTargetChange(task.id, Number(e.target.value))}
                 />
               </div>
-              <button type="button" onClick={() => onRemoveTask(task.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)' }}><X size={12}/></button>
+              <button type="button" onClick={() => onRemoveTask(task.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: '4px' }}><X size={16}/></button>
             </div>
           ))}
         </div>
