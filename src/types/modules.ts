@@ -245,6 +245,8 @@ export interface GoalTask {
   id: string;
   text: string;
   completed: boolean;
+  target_amount?: number;
+  current_amount?: number;
 }
 
 export interface Milestone {

@@ -152,10 +152,10 @@ function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, 
 
   const progress = goal.is_auto_progress ? calculateProgress() : goal.progress;
 
-  const handleToggleTask = async (milestoneId: string, taskId: string, completed: boolean) => {
+  const handleToggleTask = async (milestoneId: string, taskId: string, completed: boolean, current_amount?: number) => {
     const updatedMilestones = goal.milestones.map(m => {
       if (m.id === milestoneId && m.tasks) {
-        const updatedTasks = m.tasks.map(t => t.id === taskId ? { ...t, completed } : t);
+        const updatedTasks = m.tasks.map(t => t.id === taskId ? { ...t, completed, current_amount: current_amount !== undefined ? current_amount : t.current_amount } : t);
         const allTasksDone = updatedTasks.length > 0 && updatedTasks.every(t => t.completed);
         return { ...m, tasks: updatedTasks, completed: allTasksDone };
       }
@@ -329,11 +329,47 @@ function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '26px' }}>
                   {milestone.tasks.map(task => (
                     <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div 
-                        className={`${styles.checkbox} ${task.completed ? styles.checked : ''}`}
-                        style={{ width: '14px', height: '14px', borderRadius: '3px' }}
-                        onClick={(e) => { e.stopPropagation(); handleToggleTask(milestone.id, task.id, !task.completed); }}
-                      />
+                      {task.target_amount ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--bg-secondary)', padding: '2px', borderRadius: '6px', border: '1px solid var(--card-border)' }}>
+                          <button 
+                            type="button" 
+                            style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '4px', cursor: 'pointer' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const current = task.current_amount || 0;
+                              if (current > 0) {
+                                const newAmount = current - 1;
+                                handleToggleTask(milestone.id, task.id, newAmount >= task.target_amount!, newAmount);
+                              }
+                            }}
+                          >
+                            -
+                          </button>
+                          <span style={{ fontSize: '11px', fontWeight: 600, minWidth: '32px', textAlign: 'center' }}>
+                            {task.current_amount || 0} / {task.target_amount}
+                          </span>
+                          <button 
+                            type="button" 
+                            style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '4px', cursor: 'pointer' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const current = task.current_amount || 0;
+                              if (current < task.target_amount!) {
+                                const newAmount = current + 1;
+                                handleToggleTask(milestone.id, task.id, newAmount >= task.target_amount!, newAmount);
+                              }
+                            }}
+                          >
+                            +
+                          </button>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`${styles.checkbox} ${task.completed ? styles.checked : ''}`}
+                          style={{ width: '14px', height: '14px', borderRadius: '3px' }}
+                          onClick={(e) => { e.stopPropagation(); handleToggleTask(milestone.id, task.id, !task.completed); }}
+                        />
+                      )}
                       <span style={{ fontSize: '13px', textDecoration: task.completed ? 'line-through' : 'none', color: task.completed ? 'var(--text-tertiary)' : 'var(--text-secondary)' }}>
                         {task.text}
                       </span>
@@ -404,11 +440,11 @@ function GoalModal({ goal, onClose }: { goal: Goal | null, onClose: () => void }
     setMilestones(milestones.map(m => m.id === milestoneId ? { ...m, reward: val } : m));
   };
 
-  const handleAddTask = (milestoneId: string, text: string) => {
+  const handleAddTask = (milestoneId: string, text: string, target_amount?: number) => {
     if(!text.trim()) return;
     setMilestones(milestones.map(m => {
       if (m.id === milestoneId) {
-        return { ...m, tasks: [...(m.tasks || []), { id: generateId(), text: text.trim(), completed: false }] };
+        return { ...m, tasks: [...(m.tasks || []), { id: generateId(), text: text.trim(), completed: false, target_amount, current_amount: target_amount ? 0 : undefined }] };
       }
       return m;
     }));
@@ -572,10 +608,11 @@ function GoalModal({ goal, onClose }: { goal: Goal | null, onClose: () => void }
                     milestone={milestone} 
                     onRemove={() => handleRemoveMilestone(milestone.id)} 
                     onRewardChange={(val) => handleMilestoneRewardChange(milestone.id, val)}
-                    onAddTask={(text) => handleAddTask(milestone.id, text)}
+                    onAddTask={(text, target) => handleAddTask(milestone.id, text, target)}
                     onRemoveTask={(taskId) => handleRemoveTask(milestone.id, taskId)}
                     onTitleChange={(val) => handleMilestoneTitleChange(milestone.id, val)}
                     onTaskTextChange={(taskId, val) => handleTaskTextChange(milestone.id, taskId, val)}
+                    onTaskTargetChange={(taskId, val) => setMilestones(milestones.map(m => m.id === milestone.id ? { ...m, tasks: m.tasks?.map(t => t.id === taskId ? { ...t, target_amount: val || undefined } : t) } : m))}
                   />
               )}
             </div>
@@ -594,8 +631,9 @@ function GoalModal({ goal, onClose }: { goal: Goal | null, onClose: () => void }
   );
 }
 
-function MilestoneEditor({ milestone, onRemove, onRewardChange, onAddTask, onRemoveTask, onTitleChange, onTaskTextChange }: { milestone: Milestone, onRemove: () => void, onRewardChange: (val: string) => void, onAddTask: (text: string) => void, onRemoveTask: (taskId: string) => void, onTitleChange: (val: string) => void, onTaskTextChange: (taskId: string, val: string) => void }) {
+function MilestoneEditor({ milestone, onRemove, onRewardChange, onAddTask, onRemoveTask, onTitleChange, onTaskTextChange, onTaskTargetChange }: { milestone: Milestone, onRemove: () => void, onRewardChange: (val: string) => void, onAddTask: (text: string, target?: number) => void, onRemoveTask: (taskId: string) => void, onTitleChange: (val: string) => void, onTaskTextChange: (taskId: string, val: string) => void, onTaskTargetChange: (taskId: string, val: number) => void }) {
   const [newTask, setNewTask] = useState('');
+  const [newTarget, setNewTarget] = useState<number | ''>('');
 
   return (
     <div className={styles.milestoneItem}>
@@ -632,6 +670,17 @@ function MilestoneEditor({ milestone, onRemove, onRewardChange, onAddTask, onRem
                 onChange={e => onTaskTextChange(task.id, e.target.value)}
                 placeholder="Task description"
               />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Target:</span>
+                <input 
+                  type="number" 
+                  min="0"
+                  className={styles.input}
+                  style={{ width: '40px', padding: '2px 4px', fontSize: '11px', background: 'transparent', border: '1px dashed transparent' }}
+                  value={task.target_amount || ''}
+                  onChange={e => onTaskTargetChange(task.id, Number(e.target.value))}
+                />
+              </div>
               <button type="button" onClick={() => onRemoveTask(task.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)' }}><X size={12}/></button>
             </div>
           ))}
@@ -645,9 +694,19 @@ function MilestoneEditor({ milestone, onRemove, onRewardChange, onAddTask, onRem
           placeholder="Add a sub-task..." 
           value={newTask}
           onChange={e => setNewTask(e.target.value)}
-          onKeyDown={e => { if(e.key === 'Enter') { e.preventDefault(); onAddTask(newTask); setNewTask(''); } }}
+          onKeyDown={e => { if(e.key === 'Enter') { e.preventDefault(); onAddTask(newTask, newTarget || undefined); setNewTask(''); setNewTarget(''); } }}
         />
-        <button type="button" style={{ background: 'var(--card-border)', border: 'none', borderRadius: '6px', padding: '0 10px', cursor: 'pointer', color: 'var(--text-primary)' }} onClick={() => { onAddTask(newTask); setNewTask(''); }}>
+        <input 
+          type="number"
+          min="1"
+          placeholder="Target (opt)"
+          className={styles.input}
+          style={{ width: '80px', padding: '6px 8px', fontSize: '12px' }}
+          value={newTarget}
+          onChange={e => setNewTarget(Number(e.target.value) || '')}
+          onKeyDown={e => { if(e.key === 'Enter') { e.preventDefault(); onAddTask(newTask, newTarget || undefined); setNewTask(''); setNewTarget(''); } }}
+        />
+        <button type="button" style={{ background: 'var(--card-border)', border: 'none', borderRadius: '6px', padding: '0 10px', cursor: 'pointer', color: 'var(--text-primary)' }} onClick={() => { onAddTask(newTask, newTarget || undefined); setNewTask(''); setNewTarget(''); }}>
           Add
         </button>
       </div>
