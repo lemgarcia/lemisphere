@@ -282,6 +282,7 @@ export const useAppStore = create<AppState & AppActions>()(
           quickNavOrder: state.quickNavOrder,
           hiddenQuickNav: state.hiddenQuickNav,
           showTodoBubble: state.showTodoBubble,
+          monitoredHabitId: state.monitoredHabitId,
         }),
       }
     ),
