@@ -236,6 +236,7 @@ export interface Skill extends BaseRecord {
   checklist: ChecklistItem[];
   icon?: string;
   sort_order?: number;
+  links?: { id: string; title: string; url: string }[];
 }
 
 export interface SkillEntry extends BaseRecord {

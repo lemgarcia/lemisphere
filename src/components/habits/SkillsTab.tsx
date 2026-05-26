@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { deleteAndTrack } from '@/lib/db/deleteAndTrack';
 import { syncManager } from '@/lib/sync/SyncManager';
 import { generateId } from '@/utils';
-import { Plus, X, Pencil, Trash2, Award, GripVertical, Check } from 'lucide-react';
+import { Plus, X, Pencil, Trash2, Award, GripVertical, Check, ExternalLink } from 'lucide-react';
 import type { Skill, SkillEntry, SkillLevel, ChecklistItem, SkillStatus, SkillCategory, TaskDifficulty } from '@/types/modules';
 import styles from './Habits.module.css';
 
@@ -176,6 +176,17 @@ function SortableSkillCard({ skill, onEdit, onDelete, onToggleChecklist }: Sorta
         </div>
       )}
 
+      {skill.links && skill.links.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+          {skill.links.map(link => (
+            <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '16px', color: 'var(--mod-habits-primary)', textDecoration: 'none', border: '1px solid var(--card-border)' }}>
+              <ExternalLink size={12} />
+              {link.title}
+            </a>
+          ))}
+        </div>
+      )}
+
       <div style={{ marginTop: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
           <div className={styles.skillLevel}>{skill.level}</div>
@@ -202,6 +213,9 @@ export function SkillsTab() {
   const [newItemText, setNewItemText] = useState('');
   const [newItemDifficulty, setNewItemDifficulty] = useState<TaskDifficulty>('easy');
   const [newItemTarget, setNewTargetAmount] = useState<number | ''>('');
+  const [tempLinks, setTempLinks] = useState<{ id: string; title: string; url: string }[]>([]);
+  const [newLinkTitle, setNewLinkTitle] = useState('');
+  const [newLinkUrl, setNewLinkUrl] = useState('');
 
   const skillsRaw = useLiveQuery(() => db.skills.filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray());
   const skills = useMemo(() => {
@@ -246,6 +260,21 @@ export function SkillsTab() {
 
   const handleEditChecklistText = (id: string, text: string) => {
     setTempChecklist(tempChecklist.map(i => i.id === id ? { ...i, text } : i));
+  };
+
+  const handleAddLink = () => {
+    if (!newLinkTitle.trim() || !newLinkUrl.trim()) return;
+    let url = newLinkUrl.trim();
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url;
+    }
+    setTempLinks([...tempLinks, { id: generateId(), title: newLinkTitle.trim(), url }]);
+    setNewLinkTitle('');
+    setNewLinkUrl('');
+  };
+
+  const handleRemoveLink = (id: string) => {
+    setTempLinks(tempLinks.filter(l => l.id !== id));
   };
 
   const handleEditChecklistTarget = (id: string, target_amount: number | undefined) => {
@@ -357,6 +386,7 @@ export function SkillsTab() {
       level: bracket.level,
       xp: xp,
       checklist: tempChecklist,
+      links: tempLinks,
       icon: tempIcon,
       sort_order: editingSkill ? editingSkill.sort_order : skills?.length || 0,
       sync_status: 'pending',
@@ -393,10 +423,13 @@ export function SkillsTab() {
     setEditingSkill(skill || null);
     setTempIcon(skill?.icon || '💻');
     setTempChecklist(skill?.checklist || []);
+    setTempLinks(skill?.links || []);
     setShowIconPicker(false);
     setNewItemText('');
     setNewItemDifficulty('easy');
     setNewTargetAmount('');
+    setNewLinkTitle('');
+    setNewLinkUrl('');
     setShowSkillModal(true);
   };
 
@@ -608,6 +641,41 @@ export function SkillsTab() {
                         <button type="button" onClick={() => handleRemoveChecklistItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '4px', marginLeft: '8px' }}>
                           <X size={16} />
                         </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label>Links (Optional)</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    className={styles.input}
+                    style={{ flex: 1 }}
+                    value={newLinkTitle}
+                    onChange={e => setNewLinkTitle(e.target.value)}
+                    placeholder="Link Title (e.g., Course)"
+                  />
+                  <input
+                    className={styles.input}
+                    style={{ flex: 2 }}
+                    value={newLinkUrl}
+                    onChange={e => setNewLinkUrl(e.target.value)}
+                    placeholder="URL (https://...)"
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddLink(); } }}
+                  />
+                  <button type="button" className={styles.primaryButton} onClick={handleAddLink}><Plus size={16}/></button>
+                </div>
+                {tempLinks.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                    {tempLinks.map(link => (
+                      <div key={link.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-secondary)', padding: '8px 12px', borderRadius: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 600 }}>{link.title}</span>
+                          <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{link.url}</span>
+                        </div>
+                        <button type="button" onClick={() => handleRemoveLink(link.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={14}/></button>
                       </div>
                     ))}
                   </div>
