@@ -6,15 +6,17 @@ import { db } from '@/lib/db';
 import { generateId } from '@/utils';
 import { syncManager } from '@/lib/sync/SyncManager';
 import { useFitnessStore } from '@/stores/fitnessStore';
-import { ChevronLeft, ChevronRight, Play, RotateCcw, Timer, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, RotateCcw, Timer, CheckCircle2, Link2 } from 'lucide-react';
 import styles from '@/app/(app)/fitness/Fitness.module.css';
 import { useAppStore } from '@/stores/appStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import { GoalLinkSelector } from '@/components/habits/GoalLinkSelector';
 
 export function WorkoutsTab() {
   const [selectedSet, setselectedSet] = useState<number | null>(null);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [customTimerSec, setCustomTimerSec] = useState('');
 
   // Global Timer
   const startTimer = useFitnessStore((s) => s.startTimer);
@@ -119,15 +121,17 @@ export function WorkoutsTab() {
         .where('exercise_id').equals(ex.id)
         .reverse()
         .first();
-      if (lastLog && lastLog.weight > 0) {
-        map[ex.id] = lastLog.weight;
+      if (lastLog && Number(lastLog.weight) > 0) {
+        map[ex.id] = lastLog.weight as any;
       }
     }
     return map;
   }, [exercises]);
 
-  const toggleExercise = async (exerciseId: string, currentWeight: number) => {
+  const toggleExercise = async (exerciseId: string, currentWeight: number | string) => {
     if (!activeProgram || !selectedDayId || !selectedSet) return;
+
+    let newCompletedState = false;
 
     await db.transaction('rw', db.workout_logs, db.workout_exercise_logs, db.fitness_exercises, async () => {
       let existingLog = await db.workout_logs
@@ -158,20 +162,22 @@ export function WorkoutsTab() {
         .first();
       
       if (exLog) {
+        newCompletedState = !exLog.completed;
         await db.workout_exercise_logs.update(exLog.id, { 
-          completed: !exLog.completed, 
-          weight: currentWeight,
+          completed: newCompletedState, 
+          weight: currentWeight as any,
           updated_at: new Date().toISOString(),
           sync_status: 'pending'
         });
       } else {
+        newCompletedState = true;
         await db.workout_exercise_logs.add({
           id: generateId(),
           user_id: useAppStore.getState().userId || 'default',
           workout_log_id: logId,
           exercise_id: exerciseId,
           completed: true,
-          weight: currentWeight,
+          weight: currentWeight as any,
           sync_status: 'pending',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -191,10 +197,35 @@ export function WorkoutsTab() {
       
       await db.workout_logs.update(logId, { completed: allChecked, updated_at: new Date().toISOString(), sync_status: 'pending' });
     });
+
+    // Goal link autocomplete — when exercise is checked, mark the linked goal task as done
+    if (newCompletedState) {
+      const exercise = await db.fitness_exercises.get(exerciseId);
+      if (exercise?.linked_goal_id && exercise?.linked_task_id) {
+        const goal = await db.goals.get(exercise.linked_goal_id);
+        if (goal) {
+          // Update milestones — mark linked milestone or task within milestone as completed
+          const updatedMilestones = (goal.milestones || []).map((m: any) => {
+            if (m.id === exercise.linked_milestone_id) return { ...m, completed: true };
+            const updatedMTasks = (m.tasks || []).map((t: any) =>
+              t.id === exercise.linked_task_id ? { ...t, completed: true } : t
+            );
+            return { ...m, tasks: updatedMTasks };
+          });
+          await db.goals.update(goal.id, {
+            milestones: updatedMilestones,
+            updated_at: new Date().toISOString(),
+            sync_status: 'pending'
+          });
+          syncManager.queueSync('goals');
+        }
+      }
+    }
+
     syncManager.queueSync('fitness');
   };
 
-  const updateWeight = async (exerciseId: string, newWeight: number) => {
+  const updateWeight = async (exerciseId: string, newWeight: string) => {
     if (!activeProgram || !selectedDayId || !selectedSet) return;
 
     await db.transaction('rw', db.workout_logs, db.workout_exercise_logs, async () => {
@@ -227,7 +258,7 @@ export function WorkoutsTab() {
         
       if (exLog) {
         await db.workout_exercise_logs.update(exLog.id, { 
-          weight: newWeight,
+          weight: newWeight as any,
           updated_at: new Date().toISOString(),
           sync_status: 'pending'
         });
@@ -238,7 +269,7 @@ export function WorkoutsTab() {
           workout_log_id: logId,
           exercise_id: exerciseId,
           completed: false,
-          weight: newWeight,
+          weight: newWeight as any,
           sync_status: 'pending',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -246,6 +277,32 @@ export function WorkoutsTab() {
           device_id: 'default'
         });
       }
+    });
+    syncManager.queueSync('fitness');
+  };
+
+  const handleLinkExerciseToGoal = async (exerciseId: string, goalId: string | undefined, milestoneId: string | undefined, taskId: string | undefined, taskName: string | undefined, syncDir: 'one-way' | 'two-way') => {
+    await db.fitness_exercises.update(exerciseId, {
+      linked_goal_id: goalId,
+      linked_milestone_id: milestoneId,
+      linked_task_id: taskId,
+      linked_task_name: taskName,
+      sync_direction: syncDir,
+      updated_at: new Date().toISOString(),
+      sync_status: 'pending'
+    });
+    syncManager.queueSync('fitness');
+  };
+
+  const handleUnlinkExercise = async (exerciseId: string) => {
+    await db.fitness_exercises.update(exerciseId, {
+      linked_goal_id: undefined,
+      linked_milestone_id: undefined,
+      linked_task_id: undefined,
+      linked_task_name: undefined,
+      sync_direction: undefined,
+      updated_at: new Date().toISOString(),
+      sync_status: 'pending'
     });
     syncManager.queueSync('fitness');
   };
@@ -396,7 +453,10 @@ export function WorkoutsTab() {
             
             <div className={styles.restPresetsRow}>
               <span className={styles.presetLabel}>PRESETS:</span>
-              {exercises?.slice(0, 5).map(ex => (
+              {filteredExercises.filter(ex => {
+                const log = exerciseLogs?.find(l => l.exercise_id === ex.id);
+                return !log?.completed;
+              }).slice(0, 4).map(ex => (
                 <button 
                   key={ex.id} 
                   onClick={() => startTimer(ex.rest_sec, selectedDayId!)}
@@ -406,6 +466,24 @@ export function WorkoutsTab() {
                 </button>
               ))}
               <button onClick={() => startTimer((timerActive ? timerRemainingSec : 90) + 10, selectedDayId!)} className={styles.plusTenBtn}>+10s</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto' }}>
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="Custom sec"
+                  value={customTimerSec}
+                  onChange={e => setCustomTimerSec(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && customTimerSec) { startTimer(parseInt(customTimerSec), selectedDayId!); setCustomTimerSec(''); } }}
+                  style={{ width: '90px', padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--card-border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '13px' }}
+                />
+                <button
+                  onClick={() => { if (customTimerSec) { startTimer(parseInt(customTimerSec), selectedDayId!); setCustomTimerSec(''); } }}
+                  className={styles.presetBtn}
+                  style={{ background: 'var(--accent-violet)', color: '#fff', border: 'none' }}
+                >
+                  <Timer size={12} /> Go
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
@@ -422,7 +500,8 @@ export function WorkoutsTab() {
               <th style={{ width: '80px', textAlign: 'center' }}>Sets</th>
               <th style={{ width: '100px', textAlign: 'center' }}>Target Reps</th>
               <th style={{ width: '100px', textAlign: 'center' }}>Rest (secs)</th>
-              <th style={{ width: '100px', textAlign: 'center' }}>Weight (kg)</th>
+              <th style={{ width: '100px', textAlign: 'center' }}>Weight</th>
+              <th style={{ width: '60px', textAlign: 'center' }}>Goal</th>
             </tr>
           </thead>
           <tbody>
@@ -469,13 +548,30 @@ export function WorkoutsTab() {
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <input 
-                        type="number" 
-                        value={currentWeight || ''}
-                        onChange={(e) => updateWeight(ex.id, Number(e.target.value))}
+                        type="text" 
+                        value={currentWeight !== undefined && currentWeight !== null ? String(currentWeight) : ''}
+                        onChange={(e) => updateWeight(ex.id, e.target.value)}
                         disabled={isChecked}
-                        placeholder="e.g. 7.5"
+                        placeholder="e.g. 7.5 or BW"
                         className={styles.exTableInput}
                         style={{ textAlign: 'center', width: '80px', opacity: isChecked ? 0.5 : 1, transition: 'opacity 0.3s' }}
+                      />
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <GoalLinkSelector
+                        item={{
+                          id: ex.id,
+                          text: ex.name,
+                          completed: isChecked,
+                          difficulty: 'mid',
+                          linked_goal_id: ex.linked_goal_id,
+                          linked_milestone_id: ex.linked_milestone_id,
+                          linked_task_id: ex.linked_task_id,
+                          linked_task_name: ex.linked_task_name,
+                          sync_direction: ex.sync_direction,
+                        }}
+                        onLink={(goalId, milestoneId, taskId, taskName, syncDir) => handleLinkExerciseToGoal(ex.id, goalId, milestoneId, taskId, taskName, syncDir || 'one-way')}
+                        onUnlink={() => handleUnlinkExercise(ex.id)}
                       />
                     </td>
                   </motion.tr>
