@@ -216,6 +216,13 @@ export interface ChecklistItem {
   repeats?: number; // legacy/multiplier
   target_amount?: number;
   current_amount?: number;
+  
+  // Cross-module linking
+  linked_goal_id?: string;
+  linked_milestone_id?: string;
+  linked_task_id?: string;
+  linked_task_name?: string;
+  sync_direction?: 'one-way' | 'two-way';
 }
 
 export interface Skill extends BaseRecord {

@@ -27,6 +27,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useAppStore } from '@/stores/appStore';
+import { GoalLinkSelector } from './GoalLinkSelector';
 
 const ALL_EMOJIS = [
   '💻', '🎸', '🍳', '🗣️', '📸', '✏️', '🥋', '🪴',
@@ -259,9 +260,18 @@ export function SkillsTab() {
     const xpPerClick = task ? (difficultyMap[task.difficulty || 'easy'] || 10) * (task.repeats || 1) : 10;
     
     let xpDelta = 0;
+    let targetGoalId: string | undefined = undefined;
+    let targetMilestoneId: string | undefined = undefined;
+    let targetTaskId: string | undefined = undefined;
     
     const updatedChecklist = skill.checklist?.map(item => {
       if (item.id === itemId) {
+        if (item.linked_goal_id) {
+          targetGoalId = item.linked_goal_id;
+          targetMilestoneId = item.linked_milestone_id;
+          targetTaskId = item.linked_task_id;
+        }
+
         if (current_amount !== undefined) {
           const oldAmount = item.current_amount || 0;
           xpDelta = (current_amount - oldAmount) * xpPerClick;
@@ -275,7 +285,6 @@ export function SkillsTab() {
     }) || [];
 
     let newXp = Math.max(0, skill.xp + xpDelta);
-    
     const bracket = getSkillBracket(newXp);
 
     await db.skills.update(skillId, { 
@@ -286,6 +295,43 @@ export function SkillsTab() {
       updated_at: new Date().toISOString()
     });
     syncManager.queueSync('habits');
+
+    // Cross-module Sync: Update Goal if linked
+    if (targetGoalId) {
+      const goal = await db.goals.get(targetGoalId);
+      if (goal) {
+        let goalUpdated = false;
+        const updatedMilestones = goal.milestones.map(m => {
+          if (m.id === targetMilestoneId) {
+            if (targetTaskId) {
+              const updatedTasks = m.tasks?.map(t => {
+                if (t.id === targetTaskId) {
+                  goalUpdated = true;
+                  return { ...t, completed, current_amount };
+                }
+                return t;
+              });
+              // check if all tasks complete
+              const allDone = updatedTasks?.length ? updatedTasks.every(t => t.completed) : false;
+              return { ...m, tasks: updatedTasks, completed: allDone, completed_at: (allDone && !m.completed) ? new Date().toISOString() : m.completed_at };
+            } else {
+              goalUpdated = true;
+              return { ...m, completed, current_amount, completed_at: (completed && !m.completed) ? new Date().toISOString() : m.completed_at };
+            }
+          }
+          return m;
+        });
+
+        if (goalUpdated) {
+          await db.goals.update(targetGoalId, {
+            milestones: updatedMilestones,
+            sync_status: 'pending',
+            updated_at: new Date().toISOString()
+          });
+          syncManager.queueSync('goals');
+        }
+      }
+    }
   };
 
   const handleSaveSkill = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -533,6 +579,29 @@ export function SkillsTab() {
                                   onChange={e => handleEditChecklistTarget(item.id, Number(e.target.value) || undefined)}
                                 />
                               </div>
+                              <GoalLinkSelector 
+                                item={item}
+                                onLink={(goalId, milestoneId, taskId, taskName, syncDirection) => {
+                                  setTempChecklist(tempChecklist.map(i => i.id === item.id ? { 
+                                    ...i, 
+                                    linked_goal_id: goalId, 
+                                    linked_milestone_id: milestoneId, 
+                                    linked_task_id: taskId, 
+                                    linked_task_name: taskName,
+                                    sync_direction: syncDirection || 'two-way'
+                                  } : i));
+                                }}
+                                onUnlink={() => {
+                                  setTempChecklist(tempChecklist.map(i => i.id === item.id ? { 
+                                    ...i, 
+                                    linked_goal_id: undefined, 
+                                    linked_milestone_id: undefined, 
+                                    linked_task_id: undefined, 
+                                    linked_task_name: undefined,
+                                    sync_direction: undefined
+                                  } : i));
+                                }}
+                              />
                             </div>
                           </div>
                         </div>

@@ -37,61 +37,65 @@ export function StatStreakWidget() {
           </button>
           
           {showDropdown && (
-            <>
+            <div 
+              style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
+              onClick={() => setShowDropdown(false)}
+            >
               <div 
-                style={{ position: 'fixed', inset: 0, zIndex: 40 }}
-                onClick={() => setShowDropdown(false)}
-              />
-              <div style={{
-                position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-                background: 'var(--bg-primary)', border: '1px solid var(--card-border)',
-                borderRadius: '12px', padding: '6px', zIndex: 50,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.15)', width: '220px',
-                display: 'flex', flexDirection: 'column', gap: '2px',
-                maxHeight: '260px', overflowY: 'auto'
-              }}>
-                <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-tertiary)', padding: '6px 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Monitor Habit
+                style={{
+                  background: 'var(--bg-primary)', border: '1px solid var(--card-border)',
+                  borderRadius: '16px', padding: '16px',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.2)', width: '320px', maxWidth: '90vw',
+                  display: 'flex', flexDirection: 'column', gap: '8px',
+                  maxHeight: '70vh', overflowY: 'auto'
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', paddingBottom: '8px', borderBottom: '1px solid var(--card-border)', marginBottom: '4px' }}>
+                  Select Habit to Monitor
                 </div>
                 <button 
                   onClick={() => { setMonitoredHabitId(null); setShowDropdown(false); }}
                   style={{ 
-                    padding: '8px 10px', textAlign: 'left', 
+                    padding: '12px', textAlign: 'left', 
                     background: !monitoredHabitId ? 'var(--bg-secondary)' : 'transparent', 
-                    border: 'none', borderRadius: '6px', cursor: 'pointer', 
-                    fontSize: '13px', color: !monitoredHabitId ? 'var(--text-primary)' : 'var(--text-secondary)', 
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    fontWeight: !monitoredHabitId ? 600 : 500
+                    border: 'none', borderRadius: '8px', cursor: 'pointer', 
+                    fontSize: '14px', color: !monitoredHabitId ? 'var(--text-primary)' : 'var(--text-secondary)', 
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    fontWeight: !monitoredHabitId ? 700 : 500,
+                    transition: 'background 0.2s'
                   }}
                   onMouseEnter={(e) => { if (monitoredHabitId) e.currentTarget.style.background = 'var(--bg-secondary)'; }}
                   onMouseLeave={(e) => { if (monitoredHabitId) e.currentTarget.style.background = 'transparent'; }}
                 >
-                  <span style={{ fontSize: '14px' }}>✨</span>
+                  <span style={{ fontSize: '18px' }}>✨</span>
                   <span style={{ flex: 1 }}>Top Streak (Auto)</span>
                 </button>
-                <div style={{ height: '1px', background: 'var(--card-border)', margin: '4px 0' }} />
                 {allHabits?.map(h => (
                   <button 
                     key={h.id}
                     onClick={() => { setMonitoredHabitId(h.id); setShowDropdown(false); }}
                     style={{ 
-                      padding: '8px 10px', textAlign: 'left', 
+                      padding: '12px', textAlign: 'left', 
                       background: monitoredHabitId === h.id ? 'var(--bg-secondary)' : 'transparent', 
-                      border: 'none', borderRadius: '6px', cursor: 'pointer', 
-                      fontSize: '13px', color: monitoredHabitId === h.id ? 'var(--text-primary)' : 'var(--text-secondary)', 
-                      display: 'flex', gap: '8px', alignItems: 'center',
-                      fontWeight: monitoredHabitId === h.id ? 600 : 500
+                      border: 'none', borderRadius: '8px', cursor: 'pointer', 
+                      fontSize: '14px', color: monitoredHabitId === h.id ? 'var(--text-primary)' : 'var(--text-secondary)', 
+                      display: 'flex', gap: '12px', alignItems: 'center',
+                      fontWeight: monitoredHabitId === h.id ? 700 : 500,
+                      transition: 'background 0.2s'
                     }}
                     onMouseEnter={(e) => { if (monitoredHabitId !== h.id) e.currentTarget.style.background = 'var(--bg-secondary)'; }}
                     onMouseLeave={(e) => { if (monitoredHabitId !== h.id) e.currentTarget.style.background = 'transparent'; }}
                   >
-                    <span style={{ flexShrink: 0, fontSize: '14px' }}>{h.icon}</span> 
+                    <span style={{ flexShrink: 0, fontSize: '18px' }}>{h.icon}</span> 
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{h.name}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', background: 'var(--canvas-bg)', padding: '2px 6px', borderRadius: '4px' }}>{h.streak_current}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', background: 'var(--canvas-bg)', padding: '4px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                      {h.streak_current} 🔥
+                    </span>
                   </button>
                 ))}
               </div>
-            </>
+            </div>
           )}
           
           <span className={`${styles.statBadge} ${styles.positive}`}>🔥</span>

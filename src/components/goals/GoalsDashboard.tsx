@@ -174,6 +174,50 @@ function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, 
     });
     syncManager.queueSync('goals');
     checkAutoCompletion(updatedMilestones);
+
+    // Cross-module Two-Way Sync
+    const allSkills = await db.skills.toArray();
+    for (const skill of allSkills) {
+      if (!skill.checklist) continue;
+      let skillUpdated = false;
+      let xpDelta = 0;
+
+      const updatedChecklist = skill.checklist.map(item => {
+        if (item.linked_task_id === taskId && item.sync_direction === 'two-way') {
+          skillUpdated = true;
+          const xpPerClick = (item.difficulty === 'extreme' ? 100 : item.difficulty === 'hard' ? 50 : item.difficulty === 'mid' ? 25 : 10) * (item.repeats || 1);
+          if (current_amount !== undefined) {
+            const oldAmount = item.current_amount || 0;
+            xpDelta += (current_amount - oldAmount) * xpPerClick;
+            return { ...item, completed, current_amount };
+          } else {
+            xpDelta += completed ? xpPerClick : (item.completed ? -xpPerClick : 0);
+            return { ...item, completed };
+          }
+        }
+        return item;
+      });
+
+      if (skillUpdated) {
+        let newXp = Math.max(0, skill.xp + xpDelta);
+        // Calculate bracket simple formula used in skills (assumes 1000, 5000, 20000, 50000)
+        let level = skill.level;
+        if (newXp >= 50000) level = 'master';
+        else if (newXp >= 20000) level = 'expert';
+        else if (newXp >= 5000) level = 'advanced';
+        else if (newXp >= 1000) level = 'intermediate';
+        else level = 'beginner';
+
+        await db.skills.update(skill.id, {
+          checklist: updatedChecklist,
+          xp: newXp,
+          level,
+          sync_status: 'pending',
+          updated_at: new Date().toISOString()
+        });
+        syncManager.queueSync('habits');
+      }
+    }
   };
 
   const handleToggleMilestone = async (milestoneId: string, completed: boolean, current_amount?: number) => {
@@ -203,6 +247,49 @@ function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, 
     });
     syncManager.queueSync('goals');
     checkAutoCompletion(updatedMilestones);
+
+    // Cross-module Two-Way Sync for Milestone links
+    const allSkills = await db.skills.toArray();
+    for (const skill of allSkills) {
+      if (!skill.checklist) continue;
+      let skillUpdated = false;
+      let xpDelta = 0;
+
+      const updatedChecklist = skill.checklist.map(item => {
+        if (item.linked_milestone_id === milestoneId && !item.linked_task_id && item.sync_direction === 'two-way') {
+          skillUpdated = true;
+          const xpPerClick = (item.difficulty === 'extreme' ? 100 : item.difficulty === 'hard' ? 50 : item.difficulty === 'mid' ? 25 : 10) * (item.repeats || 1);
+          if (current_amount !== undefined) {
+            const oldAmount = item.current_amount || 0;
+            xpDelta += (current_amount - oldAmount) * xpPerClick;
+            return { ...item, completed, current_amount };
+          } else {
+            xpDelta += completed ? xpPerClick : (item.completed ? -xpPerClick : 0);
+            return { ...item, completed };
+          }
+        }
+        return item;
+      });
+
+      if (skillUpdated) {
+        let newXp = Math.max(0, skill.xp + xpDelta);
+        let level = skill.level;
+        if (newXp >= 50000) level = 'master';
+        else if (newXp >= 20000) level = 'expert';
+        else if (newXp >= 5000) level = 'advanced';
+        else if (newXp >= 1000) level = 'intermediate';
+        else level = 'beginner';
+
+        await db.skills.update(skill.id, {
+          checklist: updatedChecklist,
+          xp: newXp,
+          level,
+          sync_status: 'pending',
+          updated_at: new Date().toISOString()
+        });
+        syncManager.queueSync('habits');
+      }
+    }
   };
 
   const checkAutoCompletion = async (updatedMilestones: Milestone[]) => {
