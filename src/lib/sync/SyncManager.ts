@@ -298,7 +298,8 @@ export class SyncManager {
             useAppStore.setState({
               dashboardLayout: latest.dashboard_layout || [],
               quickNavOrder: latest.quick_nav_order || [],
-              hiddenQuickNav: latest.hidden_quick_nav || []
+              hiddenQuickNav: latest.hidden_quick_nav || [],
+              monitoredHabitId: latest.monitored_habit_id || null
             });
             if (latest.budgie_food_rotation || latest.budgie_daily_routine) {
               const { useBudgieStore } = require('@/stores/budgieStore');
