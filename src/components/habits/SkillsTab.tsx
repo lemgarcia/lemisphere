@@ -281,7 +281,9 @@ export function SkillsTab() {
     await db.skills.update(skillId, { 
       checklist: updatedChecklist,
       xp: newXp,
-      level: bracket.level
+      level: bracket.level,
+      sync_status: 'pending',
+      updated_at: new Date().toISOString()
     });
     syncManager.queueSync('habits');
   };

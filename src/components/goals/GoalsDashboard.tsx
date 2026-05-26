@@ -167,7 +167,11 @@ function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, 
       triggerConfetti(false);
     }
 
-    await db.goals.update(goal.id, { milestones: updatedMilestones });
+    await db.goals.update(goal.id, { 
+      milestones: updatedMilestones,
+      sync_status: 'pending',
+      updated_at: new Date().toISOString()
+    });
     syncManager.queueSync('goals');
     checkAutoCompletion(updatedMilestones);
   };
@@ -192,7 +196,11 @@ function GoalCard({ goal, onEdit, onDelete }: { goal: Goal, onEdit: () => void, 
       }
     }
 
-    await db.goals.update(goal.id, { milestones: updatedMilestones });
+    await db.goals.update(goal.id, { 
+      milestones: updatedMilestones,
+      sync_status: 'pending',
+      updated_at: new Date().toISOString()
+    });
     syncManager.queueSync('goals');
     checkAutoCompletion(updatedMilestones);
   };
