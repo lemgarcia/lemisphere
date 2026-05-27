@@ -240,7 +240,12 @@ export function HabitsTab() {
       }
 
       // Handle Manual Streak Override Backfill
-      if (editingHabit && newCurrent !== editingHabit.streak_current) {
+      // Run for: new habits with a starting streak, OR edited habits where streak changed
+      const needsBackfill = editingHabit 
+        ? newCurrent !== editingHabit.streak_current 
+        : newCurrent > 0;
+
+      if (needsBackfill) {
         const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
         const allComps = await db.habit_completions.where('habit_id').equals(habitId).filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray();
 
