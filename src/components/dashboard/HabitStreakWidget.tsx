@@ -38,10 +38,8 @@ export function HabitStreakWidget() {
       const completion = habitsData?.completions.find(c => c.habit_id === habitId);
       if (completion) {
         await deleteAndTrack('habit_completions', completion.id);
-        const habit = await db.habits.get(habitId);
-        if (habit) {
-          await db.habits.update(habitId, { streak_current: Math.max(0, (habit.streak_current || 1) - 1) });
-        }
+        const { recalculateHabitStreak } = await import('@/utils/habitUtils');
+        await recalculateHabitStreak(habitId, userId);
       }
     } else {
       // Add completion
@@ -57,10 +55,8 @@ export function HabitStreakWidget() {
         device_id: 'browser',
         sync_status: 'local'
       });
-      const habit = await db.habits.get(habitId);
-      if (habit) {
-        await db.habits.update(habitId, { streak_current: (habit.streak_current || 0) + 1 });
-      }
+      const { recalculateHabitStreak } = await import('@/utils/habitUtils');
+      await recalculateHabitStreak(habitId, userId);
     }
     syncManager.queueSync('habits');
   };

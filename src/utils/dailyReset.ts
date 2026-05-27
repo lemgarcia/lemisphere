@@ -14,25 +14,12 @@ export async function processDailyResets(userId: string) {
 
   const yesterdayStr = format(subDays(today, 1), 'yyyy-MM-dd');
 
-  // 1. Reset Habit Streaks
-  // If a habit has a streak > 0, but no completion yesterday AND no completion today,
-  // then the streak is officially broken.
+  // 1. Re-evaluate Habit Streaks
+  // Ensure that skipped days accurately break the streak, accounting for custom frequency days
+  const { recalculateHabitStreak } = await import('@/utils/habitUtils');
   const habits = await db.habits.filter(h => h.is_active && h.user_id === userId).toArray();
   for (const habit of habits) {
-    if (habit.streak_current && habit.streak_current > 0) {
-      const recentCompletions = await db.habit_completions
-        .where('habit_id').equals(habit.id)
-        .filter(c => c.date === yesterdayStr || c.date === todayStr)
-        .toArray();
-      
-      if (recentCompletions.length === 0) {
-        // Streak broken
-        await db.habits.update(habit.id, { 
-          streak_current: 0,
-          updated_at: new Date().toISOString()
-        });
-      }
-    }
+    await recalculateHabitStreak(habit.id, userId);
   }
 
   lastProcessedDay = todayStr;
