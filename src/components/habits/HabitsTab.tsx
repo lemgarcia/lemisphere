@@ -340,11 +340,11 @@ export function HabitsTab() {
         };
         await db.habit_completions.add(newCompletion);
       }
-
-      // Recalculate streak using the robust shared utility
-      const { recalculateHabitStreak } = await import('@/utils/habitUtils');
-      await recalculateHabitStreak(habit.id, useAppStore.getState().userId || 'default');
     });
+
+    // Recalculate streak AFTER transaction commits so all data is visible
+    const { recalculateHabitStreak } = await import('@/utils/habitUtils');
+    await recalculateHabitStreak(habit.id, useAppStore.getState().userId || 'default');
     syncManager.queueSync('habits');
   };
 

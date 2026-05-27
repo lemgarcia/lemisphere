@@ -26,15 +26,18 @@ export async function recalculateHabitStreak(habitId: string, userId: string) {
       isActiveDay = habit.frequency_days.includes(dayOfWeek);
     }
 
-    if (completedDates.has(iterDateStr)) {
-      currentStreak++;
-      if (currentStreak > bestStreak) bestStreak = currentStreak;
-    } else {
-      // Missed an active day — streak ends here (unless it's today, we still have time)
-      if (isActiveDay && iterDateStr !== todayStr) {
-        break;
+    if (isActiveDay) {
+      if (completedDates.has(iterDateStr)) {
+        currentStreak++;
+        if (currentStreak > bestStreak) bestStreak = currentStreak;
+      } else {
+        // Missed an active day — streak ends here (unless it's today, we still have time)
+        if (iterDateStr !== todayStr) {
+          break;
+        }
       }
     }
+    // Non-active days are completely skipped — they don't count and they don't break streaks
 
     currDate.setUTCDate(currDate.getUTCDate() - 1);
   }
