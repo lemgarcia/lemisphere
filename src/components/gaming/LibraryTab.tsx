@@ -38,6 +38,7 @@ export function LibraryTab() {
   const [showGameModal, setShowGameModal] = useState<Game | null>(null);
   const [gameToDelete, setGameToDelete] = useState<string | null>(null);
   const [gpWarningModal, setGpWarningModal] = useState<{ required: number, current: number, action: string } | null>(null);
+  const [pardonModalData, setPardonModalData] = useState<{ gameId: string, currentStatus: GameStatus, gameTitle: string } | null>(null);
   const [newGame, setNewGame] = useState<Partial<Game> | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
@@ -95,8 +96,13 @@ export function LibraryTab() {
     setCoverPreview(null);
   };
 
-  const handleUpdateStatus = async (gameId: string, currentStatus: GameStatus, newStatus: GameStatus, gameTitle: string) => {
+  const handleUpdateStatus = async (gameId: string, currentStatus: GameStatus, newStatus: GameStatus, gameTitle: string, pardonReason?: string) => {
     if (currentStatus === newStatus) return;
+
+    if (newStatus === 'pardoned' && pardonReason === undefined) {
+      setPardonModalData({ gameId, currentStatus, gameTitle });
+      return;
+    }
 
     // Get all past transactions for this game to know what milestones we've already hit
     const txns = await db.gp_transactions.where('game_id').equals(gameId).toArray();
@@ -171,15 +177,12 @@ export function LibraryTab() {
       return;
     }
 
-    const updates: Partial<Game> = { status: newStatus, updated_at: new Date().toISOString() };
+    const updates: Partial<Game> = { status: newStatus, sync_status: 'pending', updated_at: new Date().toISOString() };
     if (newStatus === 'completed' || newStatus === 'mastered') {
       updates.completed_at = new Date().toISOString();
     }
-    if (newStatus === 'pardoned') {
-      const pardonReason = window.prompt("Why are you pardoning this game? Was it too hard, boring, or just not for you? (Optional)");
-      if (pardonReason !== null) {
-        updates.pardon_reason = pardonReason;
-      }
+    if (newStatus === 'pardoned' && pardonReason !== undefined) {
+      updates.pardon_reason = pardonReason;
     }
 
     await db.transaction('rw', db.games, db.gp_transactions, async () => {

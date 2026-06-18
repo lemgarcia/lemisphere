@@ -290,6 +290,7 @@ export interface Goal extends BaseRecord {
   icon?: string;
   color?: string;
   reward?: string;
+  sort_order?: number;
 }
 
 export interface Todo extends BaseRecord {

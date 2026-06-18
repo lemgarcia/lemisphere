@@ -54,14 +54,14 @@ export function GameDetailsTab() {
 
   const handleSaveNotes = async () => {
     if (selectedGameId) {
-      await db.games.update(selectedGameId, { notes, updated_at: new Date().toISOString() });
+      await db.games.update(selectedGameId, { notes, sync_status: 'pending', updated_at: new Date().toISOString() });
       // Show some temporary success state if needed
     }
   };
 
   const handleToggleFavorite = async () => {
     if (!game) return;
-    await db.games.update(game.id, { is_favorite: !game.is_favorite, updated_at: new Date().toISOString() });
+    await db.games.update(game.id, { is_favorite: !game.is_favorite, sync_status: 'pending', updated_at: new Date().toISOString() });
   };
 
   const confirmDeleteGame = async () => {
@@ -88,6 +88,7 @@ export function GameDetailsTab() {
       genre: formData.get('genre') as string || undefined,
       release_year: formData.get('release_year') ? Number(formData.get('release_year')) : undefined,
       chronological_order: formData.get('chronological_order') ? Number(formData.get('chronological_order')) : undefined,
+      sync_status: 'pending' as const,
       updated_at: new Date().toISOString(),
     };
 
@@ -106,14 +107,14 @@ export function GameDetailsTab() {
       url: formData.get('url') as string,
     };
     const updatedLinks = [...(game.links || []), newLink];
-    await db.games.update(game.id, { links: updatedLinks, updated_at: new Date().toISOString() });
+    await db.games.update(game.id, { links: updatedLinks, sync_status: 'pending', updated_at: new Date().toISOString() });
     setShowLinkModal(false);
   };
 
   const handleDeleteLink = async (linkId: string) => {
     if (!game) return;
     const updatedLinks = (game.links || []).filter(l => l.id !== linkId);
-    await db.games.update(game.id, { links: updatedLinks, updated_at: new Date().toISOString() });
+    await db.games.update(game.id, { links: updatedLinks, sync_status: 'pending', updated_at: new Date().toISOString() });
   };
 
   if (!game) {

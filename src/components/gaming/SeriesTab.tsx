@@ -431,7 +431,7 @@ export function SeriesTab() {
                         className={styles.primaryButton}
                         style={{ padding: '6px 12px', fontSize: '13px' }}
                         onClick={async () => {
-                          await db.games.update(game.id, { series_id: selectedSeriesId, updated_at: new Date().toISOString() });
+                          await db.games.update(game.id, { series_id: selectedSeriesId, sync_status: 'pending', updated_at: new Date().toISOString() });
                         }}
                       >
                         <Plus size={14} /> Add

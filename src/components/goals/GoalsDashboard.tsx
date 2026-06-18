@@ -4,8 +4,24 @@ import { db } from '@/lib/db';
 import { deleteAndTrack } from '@/lib/db/deleteAndTrack';
 import { syncManager } from '@/lib/sync/SyncManager';
 import { generateId } from '@/utils';
-import { Plus, Target, CheckCircle, Clock, ChevronDown, ChevronRight, X, Calendar, Edit2, Trash2, Gift } from 'lucide-react';
+import { Plus, Target, CheckCircle, Clock, ChevronDown, ChevronRight, X, Calendar, Edit2, Trash2, Gift, GripVertical } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { 
+  DndContext, 
+  closestCenter, 
+  KeyboardSensor, 
+  PointerSensor, 
+  useSensor, 
+  useSensors 
+} from '@dnd-kit/core';
+import { 
+  arrayMove, 
+  SortableContext, 
+  sortableKeyboardCoordinates, 
+  rectSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { Goal, Milestone, GoalTask, GoalStatus, GoalCategory } from '@/types/modules';
 import styles from './Goals.module.css';
 import { useAppStore } from '@/stores/appStore';
@@ -42,10 +58,38 @@ export function GoalsDashboard() {
   const filteredGoals = useMemo(() => {
     if (!goals) return [];
     return goals.filter(g => g.status === activeTab).sort((a,b) => {
-      // sort by progress descending
+      if (a.sort_order !== undefined && b.sort_order !== undefined) {
+        return a.sort_order - b.sort_order;
+      }
       return b.progress - a.progress;
     });
   }, [goals, activeTab]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = async (event: any) => {
+    const { active, over } = event;
+    if (active.id !== over.id && filteredGoals) {
+      const oldIndex = filteredGoals.findIndex(g => g.id === active.id);
+      const newIndex = filteredGoals.findIndex(g => g.id === over.id);
+      
+      const newGoals = arrayMove(filteredGoals, oldIndex, newIndex);
+      
+      await Promise.all(
+        newGoals.map((goal, index) => 
+          db.goals.update(goal.id, { 
+            sort_order: index,
+            sync_status: 'pending',
+            updated_at: new Date().toISOString(),
+          })
+        )
+      );
+      syncManager.queueSync('goals');
+    }
+  };
 
   const metrics = useMemo(() => {
     if (!goals) return { active: 0, completed: 0, total: 0 };
@@ -97,15 +141,19 @@ export function GoalsDashboard() {
       </div>
 
       <div className={styles.goalsGrid}>
-        {filteredGoals.map(goal => (
-          <GoalCard 
-            key={goal.id} 
-            goal={goal} 
-            skills={skills || []}
-            onEdit={() => { setEditingGoal(goal); setShowModal(true); }}
-            onDelete={() => setGoalToDelete(goal)}
-          />
-        ))}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={filteredGoals.map(g => g.id)} strategy={rectSortingStrategy}>
+            {filteredGoals.map(goal => (
+              <SortableGoalCard 
+                key={goal.id} 
+                goal={goal} 
+                skills={skills || []}
+                onEdit={() => { setEditingGoal(goal); setShowModal(true); }}
+                onDelete={() => setGoalToDelete(goal)}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
         {filteredGoals.length === 0 && (
           <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)', gridColumn: '1 / -1' }}>
             No {activeTab} goals found.
@@ -133,7 +181,32 @@ export function GoalsDashboard() {
   );
 }
 
-function GoalCard({ goal, skills, onEdit, onDelete }: { goal: Goal, skills: any[], onEdit: () => void, onDelete: () => void }) {
+function SortableGoalCard(props: { goal: Goal, skills: any[], onEdit: () => void, onDelete: () => void }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: props.goal.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 1,
+    position: 'relative' as const,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <GoalCard {...props} dragHandleProps={{ attributes, listeners }} />
+    </div>
+  );
+}
+
+function GoalCard({ goal, skills, onEdit, onDelete, dragHandleProps }: { goal: Goal, skills: any[], onEdit: () => void, onDelete: () => void, dragHandleProps?: any }) {
   const [expanded, setExpanded] = useState(false);
   const [expandedMilestones, setExpandedMilestones] = useState<Record<string, boolean>>({});
 
@@ -364,6 +437,11 @@ function GoalCard({ goal, skills, onEdit, onDelete }: { goal: Goal, skills: any[
   return (
     <div className={styles.goalCard} onClick={() => setExpanded(!expanded)}>
       <div className={styles.goalHeader}>
+        {dragHandleProps && (
+          <div {...dragHandleProps.attributes} {...dragHandleProps.listeners} onClick={(e) => e.stopPropagation()} style={{ cursor: 'grab', display: 'flex', alignItems: 'center', color: 'var(--text-tertiary)', marginRight: '-4px' }}>
+            <GripVertical size={16} />
+          </div>
+        )}
         <div className={styles.goalIcon} style={{ background: `${goal.color || 'var(--mod-goals-primary)'}22`, color: goal.color || 'var(--mod-goals-primary)' }}>
           {goal.icon || '🎯'}
         </div>
@@ -658,8 +736,15 @@ function GoalModal({ goal, onClose }: { goal: Goal | null, onClose: () => void }
       created_at: goal?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
       version: (goal?.version || 0) + 1,
-      device_id: 'default'
+      device_id: 'default',
+      sort_order: goal?.sort_order ?? 0
     };
+
+    if (!goal) {
+      const allGoals = await db.goals.toArray();
+      const maxSortOrder = allGoals.reduce((max, g) => Math.max(max, g.sort_order ?? 0), 0);
+      data.sort_order = maxSortOrder + 1;
+    }
 
     // If auto progress, manually recalculate it right now
     if (data.is_auto_progress) {
