@@ -176,7 +176,7 @@ export function LibraryTab() {
       updates.completed_at = new Date().toISOString();
     }
     if (newStatus === 'pardoned') {
-      const pardonReason = window.prompt("Why is this game pardoned? (Optional)");
+      const pardonReason = window.prompt("Why are you pardoning this game? Was it too hard, boring, or just not for you? (Optional)");
       if (pardonReason !== null) {
         updates.pardon_reason = pardonReason;
       }

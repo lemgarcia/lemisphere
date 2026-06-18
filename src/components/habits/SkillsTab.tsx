@@ -515,7 +515,7 @@ export function SkillsTab() {
                     <option value="Creative">Creative</option>
                     <option value="Self">Self</option>
                     <option value="Upskill">Upskill</option>
-                    <option value="Fun">Fun</option>
+                    <option value="Talent">Talent</option>
                     <option value="Reinforcement">Reinforcement</option>
                   </select>
                 </div>

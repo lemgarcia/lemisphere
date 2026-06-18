@@ -35,12 +35,6 @@ const ALLOWED_COLUMNS_PER_TABLE: Record<string, string[]> = {
   game_sessions: ['id', 'user_id', 'game_id', 'date', 'duration', 'notes', 'gp_gained', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   gp_transactions: ['id', 'user_id', 'game_id', 'amount', 'reason', 'type', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   
-  bird_profiles: ['id', 'user_id', 'name', 'species', 'color_mutation', 'gender', 'hatch_date', 'adopt_date', 'photo_url', 'ring_number', 'notes', 'is_active', 'linked_bird_id', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
-  care_events: ['id', 'user_id', 'bird_id', 'type', 'date', 'time', 'value', 'notes', 'food_type', 'medication_name', 'dose', 'vet_name', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
-  training_sessions: ['id', 'user_id', 'bird_id', 'date', 'day_no', 'session_type', 'training_type', 'training_code', 'notes', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
-  trick_progress: ['id', 'user_id', 'bird_id', 'trick_name', 'status', 'started_at', 'mastered_at', 'notes', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
-  training_blueprints: ['id', 'user_id', 'bird_id', 'code', 'category', 'training_name', 'description', 'next_step', 'notes', 'sort_order', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
-  
   habits: ['id', 'user_id', 'name', 'description', 'icon', 'color', 'frequency', 'frequency_days', 'target_count', 'category', 'is_active', 'streak_current', 'streak_best', 'sort_order', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   habit_completions: ['id', 'user_id', 'habit_id', 'date', 'count', 'notes', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   skills: ['id', 'user_id', 'name', 'category', 'level', 'xp', 'notes', 'description', 'status', 'checklist', 'links', 'icon', 'sort_order', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
@@ -67,11 +61,6 @@ const DEFAULTS_PER_TABLE: Record<string, Record<string, unknown>> = {
   goals: { category: 'other', status: 'active', progress: 0, is_auto_progress: false, milestones: [] },
   todos: { text: '', is_completed: false, position: 0 },
   calendar_events: { day: '', time: '', activity: '', type: '', event_notified: false },
-  bird_profiles: { species: '', color_mutation: '', gender: 'unknown', is_active: true },
-  care_events: { type: 'health_note', date: '' },
-  training_sessions: { date: '', day_no: 1, session_type: 'Training', training_type: 'Introduction', training_code: '' },
-  trick_progress: { trick_name: '', status: 'learning', started_at: new Date().toISOString() },
-  training_blueprints: { code: '', category: '', training_name: '', description: '', next_step: '' },
   user_preferences: { dashboard_layout: [], quick_nav_order: [], hidden_quick_nav: [], budgie_food_rotation: [], budgie_daily_routine: [] },
 };
 
@@ -347,14 +336,6 @@ export class SyncManager {
           { dexie: db.game_sessions, supabase: 'game_sessions', dependsOn: 'games' },
           { dexie: db.gp_transactions, supabase: 'gp_transactions', dependsOn: 'games' },
         ];
-      case 'budgie':
-        return [
-          { dexie: db.bird_profiles, supabase: 'bird_profiles' },
-          { dexie: db.care_events, supabase: 'care_events', dependsOn: 'bird_profiles' },
-          { dexie: db.training_blueprints, supabase: 'training_blueprints', dependsOn: 'bird_profiles' },
-          { dexie: db.training_sessions, supabase: 'training_sessions', dependsOn: 'bird_profiles' },
-          { dexie: db.trick_progress, supabase: 'trick_progress', dependsOn: 'bird_profiles' },
-        ];
       case 'habits':
         return [
           { dexie: db.habits, supabase: 'habits' },
@@ -446,11 +427,6 @@ export class SyncManager {
         'fitness_programs',
         'skill_entries',
         'habit_completions',
-        'care_events',
-        'training_sessions',
-        'trick_progress',
-        'training_blueprints',
-        'bird_profiles',
         'game_sessions',
         'gp_transactions',
         'games',
@@ -524,7 +500,7 @@ export class SyncManager {
   public async syncAll() {
     if (this._paused) return;
 
-    const modules: ModuleId[] = ['dashboard', 'fitness', 'gaming', 'budgie', 'habits', 'goals'];
+    const modules: ModuleId[] = ['dashboard', 'fitness', 'gaming', 'habits', 'goals', 'settings'];
 
     this.syncTimers.forEach(timer => clearTimeout(timer));
     this.syncTimers.clear();

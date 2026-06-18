@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Target, Dumbbell, Flame,
   Bird, Gamepad2, BookOpen, Search,
-  ArrowRight, Plus, Calendar,
+  ArrowRight, Plus, Calendar, Scale,
 } from 'lucide-react';
 import { useAppStore } from '@/stores/appStore';
 import { db } from '@/lib/db';
@@ -69,18 +69,16 @@ export function CommandPalette() {
     { id: 'nav-goals',     label: 'Goals',         icon: Target,          category: 'Navigate', action: () => navigate('/goals') },
     { id: 'nav-fitness',   label: 'Fitness',       icon: Dumbbell,        category: 'Navigate', action: () => navigate('/fitness') },
     { id: 'nav-habits',    label: 'Skills & Habits', icon: Flame,         category: 'Navigate', action: () => navigate('/habits') },
-    { id: 'nav-budgie',    label: 'Budgie Care',   icon: Bird,            category: 'Navigate', action: () => navigate('/budgie') },
     { id: 'nav-gaming',    label: 'Gaming',        icon: Gamepad2,        category: 'Navigate', action: () => navigate('/gaming') },
     // Quick actions
     { id: 'new-workout',  label: 'Log Workout',     icon: Dumbbell,       category: 'Quick Add', description: 'Add a new workout session',      action: () => navigate('/fitness') },
     { id: 'new-game',     label: 'Add Game',         icon: Gamepad2,       category: 'Quick Add', description: 'Add a game to your backlog',     action: () => navigate('/gaming') },
     { id: 'new-goal',     label: 'Create Goal',      icon: Target,        category: 'Quick Add', description: 'Set a new goal',                 action: () => navigate('/goals') },
-    { id: 'log-care',     label: 'Log Budgie Care',  icon: Bird,          category: 'Quick Add', description: 'Record a care event',            action: () => navigate('/budgie') },
+    { id: 'log-weight',   label: 'Log Weight',       icon: Scale,         category: 'Quick Add', description: 'Update body metrics',            action: () => navigate('/fitness') },
   ];
 
   // Dynamic User Data Search
   const games = useLiveQuery(() => db.games.toArray()) || [];
-  const birds = useLiveQuery(() => db.bird_profiles.toArray()) || [];
   const habits = useLiveQuery(() => db.habits.toArray()) || [];
   const skills = useLiveQuery(() => db.skills.toArray()) || [];
   const goals = useLiveQuery(() => db.goals.toArray()) || [];
@@ -88,9 +86,6 @@ export function CommandPalette() {
 
   games.forEach(g => {
     COMMANDS.push({ id: `game-${g.id}`, label: g.title, icon: Gamepad2, category: 'Games', description: 'Game', action: () => navigate('/gaming') });
-  });
-  birds.forEach(b => {
-    COMMANDS.push({ id: `bird-${b.id}`, label: b.name, icon: Bird, category: 'Budgies', description: 'Bird Profile', action: () => navigate('/budgie') });
   });
   habits.forEach(h => {
     COMMANDS.push({ id: `habit-${h.id}`, label: h.name, icon: Flame, category: 'Habits', description: 'Habit', action: () => navigate('/habits') });

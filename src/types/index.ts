@@ -23,9 +23,9 @@ export type ModuleId =
   | 'dashboard'
   | 'fitness'
   | 'gaming'
-  | 'budgie'
   | 'habits'
-  | 'goals';
+  | 'goals'
+  | 'settings';
 
 /** Sidebar nav item */
 export interface NavItem {
@@ -48,7 +48,6 @@ export type WidgetType =
   | 'fitness-ring'
   | 'fitness-today'
   | 'gaming-now'
-  | 'budgie-status'
   | 'daily-progress';
 
 export interface DashboardWidget {

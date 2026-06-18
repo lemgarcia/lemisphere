@@ -40,7 +40,7 @@ import { StatPendingTodosWidget } from '@/components/dashboard/StatPendingTodosW
 import { HabitStreakWidget } from '@/components/dashboard/HabitStreakWidget';
 import { GoalProgressWidget } from '@/components/dashboard/GoalProgressWidget';
 import { GamingNowWidget } from '@/components/dashboard/GamingNowWidget';
-import { BudgieStatusWidget } from '@/components/dashboard/BudgieStatusWidget';
+
 import { FitnessTodayWidget } from '@/components/dashboard/FitnessTodayWidget';
 
 import styles from './Dashboard.module.css';
@@ -68,7 +68,7 @@ const STAT_CARDS = [
 ];
 
 const QUICK_NAV_DATA = {
-  'budgie':  { key: 'budgie',  href: '/budgie',  icon: '🦜', name: 'Budgie Care', sub: 'Chores & Training', className: 'budgie' },
+
   'fitness': { key: 'fitness', href: '/fitness', icon: '💪', name: 'Fitness',     sub: 'Programs & Logs',   className: 'fitness' },
   'goals':   { key: 'goals',   href: '/goals',   icon: '🎯', name: 'Goals',       sub: 'Milestones & Tasks', className: 'goals' },
   'habits':  { key: 'habits',  href: '/habits',  icon: '🔥', name: 'Skills & Habits', sub: 'Upskilling & Streaks', className: 'habits' },
@@ -125,7 +125,7 @@ export function DashboardPage() {
       let expectedWidth = w.width;
       if (w.type === 'habit-streak') { expectedHeight = 'tall'; expectedWidth = 'third'; }
       if (w.type === 'goal-progress') { expectedHeight = 'standard'; expectedWidth = 'two-thirds'; }
-      if (w.type === 'gaming-now' || w.type === 'budgie-status' || w.type === 'fitness-today') {
+      if (w.type === 'gaming-now' || w.type === 'fitness-today') {
         expectedHeight = 'standard'; expectedWidth = 'third';
       }
       
@@ -445,7 +445,7 @@ export function DashboardPage() {
                 case 'goal-progress': WidgetComponent = <GoalProgressWidget />; break;
                 case 'fitness-today': WidgetComponent = <FitnessTodayWidget />; break;
                 case 'gaming-now': WidgetComponent = <GamingNowWidget />; break;
-                case 'budgie-status': WidgetComponent = <BudgieStatusWidget />; break;
+
                 default: return null;
               }
 

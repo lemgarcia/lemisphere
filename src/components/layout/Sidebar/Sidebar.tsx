@@ -37,9 +37,9 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard',   href: '/dashboard', icon: LayoutDashboard, accentColor: '#8b5cf6' },
   { id: 'goals',     label: 'Goals',       href: '/goals',     icon: Target,          accentColor: '#e05c7a' },
   { id: 'fitness',   label: 'Fitness',     href: '/fitness',   icon: Dumbbell,        accentColor: '#d4a017' },
-  { id: 'habits',    label: 'Skills/Habits', href: '/habits',  icon: Flame,           accentColor: '#e05c3a' },
-  { id: 'budgie',    label: 'Budgie Care', href: '/budgie',    icon: Bird,            accentColor: '#17a085' },
-  { id: 'gaming',    label: 'Gaming',      href: '/gaming',    icon: Gamepad2,        accentColor: '#5c5cbf' },
+  { id: 'habits',    label: 'Skills & Habits', href: '/habits',  icon: Flame,           accentColor: '#f97316' },
+  { id: 'gaming',    label: 'Gaming',      href: '/gaming',    icon: Gamepad2,        accentColor: '#8b5cf6' },
+  { id: 'settings',  label: 'Settings',    href: '/settings',  icon: Settings,        accentColor: '#9ca3af' },
 ];
 
 export function Sidebar() {

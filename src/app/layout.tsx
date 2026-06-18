@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: '%s · Lemisphere',
   },
   description:
-    'Your premium personal life-management hub. Track fitness, gaming, habits, goals, budgie care, and more — beautifully.',
+    'Your premium personal life-management hub. Track fitness, gaming, habits, goals, and more — beautifully.',
   keywords: ['personal dashboard', 'habit tracker', 'fitness tracker', 'life management'],
   authors: [{ name: 'Lemisphere' }],
   robots: 'noindex, nofollow', // private personal app

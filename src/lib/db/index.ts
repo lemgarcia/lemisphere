@@ -10,16 +10,12 @@ import type {
   Game,
   GameSession,
   GPTransaction,
-  BirdProfile,
-  CareEvent,
-  TrainingSession,
-  TrickProgress,
+
   Habit,
   HabitCompletion,
   Skill,
   SkillEntry,
   Goal,
-  TrainingBlueprint,
   AuthUser,
   Todo,
   UserPreferences,
@@ -44,12 +40,7 @@ export class LemisphereDB extends Dexie {
   game_sessions!: Table<GameSession, string>;
   gp_transactions!: Table<GPTransaction, string>;
 
-  // Budgie
-  bird_profiles!: Table<BirdProfile, string>;
-  care_events!: Table<CareEvent, string>;
-  training_sessions!: Table<TrainingSession, string>;
-  trick_progress!: Table<TrickProgress, string>;
-  training_blueprints!: Table<TrainingBlueprint, string>;
+
 
   // Habits & Skills
   habits!: Table<Habit, string>;
@@ -137,6 +128,14 @@ export class LemisphereDB extends Dexie {
 
     this.version(9).stores({
       user_preferences: 'id, user_id, sync_status, updated_at',
+    });
+
+    this.version(10).stores({
+      bird_profiles: null,
+      care_events: null,
+      training_sessions: null,
+      trick_progress: null,
+      training_blueprints: null,
     });
   }
 }

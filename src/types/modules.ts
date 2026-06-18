@@ -211,7 +211,7 @@ export interface HabitCompletion extends BaseRecord {
 
 export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert' | 'master';
 export type SkillStatus = 'learning' | 'mastered' | 'on_hold' | 'stopped';
-export type SkillCategory = 'Technical' | 'Creative' | 'Self' | 'Upskill' | 'Fun' | 'Reinforcement';
+export type SkillCategory = 'Technical' | 'Creative' | 'Self' | 'Upskill' | 'Talent' | 'Reinforcement';
 
 export type TaskDifficulty = 'easy' | 'mid' | 'hard' | 'extreme';
 

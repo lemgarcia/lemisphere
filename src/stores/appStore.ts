@@ -89,7 +89,7 @@ const defaultDashboardLayout: DashboardWidget[] = [
   { id: 'goal-progress', type: 'goal-progress', position: 2, width: 'two-thirds', height: 'standard', visible: true },
   { id: 'fitness-today', type: 'fitness-today', position: 3, width: 'third', height: 'standard', visible: true },
   { id: 'gaming-now', type: 'gaming-now',       position: 4, width: 'third', height: 'standard', visible: true },
-  { id: 'budgie-status', type: 'budgie-status', position: 5, width: 'third', height: 'standard', visible: true },
+
 ];
 
 export const useAppStore = create<AppState & AppActions>()(
@@ -105,7 +105,7 @@ export const useAppStore = create<AppState & AppActions>()(
         sidebarCollapsed: false,
         activeModule: 'dashboard',
         dashboardLayout: defaultDashboardLayout,
-        quickNavOrder: ['budgie', 'fitness', 'goals', 'habits', 'gaming'],
+        quickNavOrder: ['fitness', 'goals', 'habits', 'gaming'],
         hiddenQuickNav: [],
         showTodoBubble: false,
         monitoredHabitId: null,

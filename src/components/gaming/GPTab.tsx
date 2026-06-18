@@ -10,7 +10,10 @@ import { DeleteConfirmationModal } from '@/components/ui/Modal/DeleteConfirmatio
 export function GPTab() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [logToDelete, setLogToDelete] = useState<string | null>(null);
-  const transactions = useLiveQuery(() => db.gp_transactions.filter(x => x.user_id === (useAppStore.getState().userId || 'default')).reverse().toArray());
+  const transactions = useLiveQuery(async () => {
+    const txns = await db.gp_transactions.filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray();
+    return txns.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  });
   const games = useLiveQuery(() => db.games.filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray());
   
   const totalGP = transactions?.reduce((sum, t) => sum + t.amount, 0) || 0;

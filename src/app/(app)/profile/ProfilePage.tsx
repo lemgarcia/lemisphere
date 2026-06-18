@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { UserCircle, Target, Flame, Bird, Dumbbell, Gamepad2, Settings2, Camera, Check, X } from 'lucide-react';
+import { UserCircle, Target, Flame, Dumbbell, Gamepad2, Settings2, Camera, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import { useLiveQuery } from 'dexie-react-hooks';
 import styles from '@/styles/modulePage.module.css';
@@ -39,7 +39,7 @@ export function ProfilePage() {
   // Queries
   const activeGoalsCount = useLiveQuery(() => db.goals.where('status').equals('in-progress').filter(x => x.user_id === (useAppStore.getState().userId || 'default')).count()) || 0;
   const activeHabitsCount = useLiveQuery(() => db.habits.where('is_active').equals(1).filter(x => x.user_id === (useAppStore.getState().userId || 'default')).count()) || 0;
-  const activeBirdsCount = useLiveQuery(() => db.bird_profiles.where('is_active').equals(1).filter(x => x.user_id === (useAppStore.getState().userId || 'default')).count()) || 0;
+
   const activeProgramsCount = useLiveQuery(() => db.fitness_programs.where('status').equals('active').filter(x => x.user_id === (useAppStore.getState().userId || 'default')).count()) || 0;
   const playingGamesCount = useLiveQuery(() => db.games.where('status').equals('playing').filter(x => x.user_id === (useAppStore.getState().userId || 'default')).count()) || 0;
 
@@ -193,13 +193,6 @@ export function ProfilePage() {
               <Dumbbell size={20} /> <span style={{ fontSize: '13px', fontWeight: 600 }}>Fitness Programs</span>
             </div>
             <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--text-primary)' }}>{activeProgramsCount}</div>
-          </div>
-
-          <div style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: 'var(--card-shadow)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--mod-budgie-primary)' }}>
-              <Bird size={20} /> <span style={{ fontSize: '13px', fontWeight: 600 }}>Budgies</span>
-            </div>
-            <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--text-primary)' }}>{activeBirdsCount}</div>
           </div>
 
           <div style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: 'var(--card-shadow)' }}>
