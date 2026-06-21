@@ -101,6 +101,7 @@ export function LibraryTab() {
 
     if (newStatus === 'pardoned' && pardonReason === undefined) {
       setPardonModalData({ gameId, currentStatus, gameTitle });
+      setShowGameModal(null);
       return;
     }
 
@@ -332,7 +333,7 @@ export function LibraryTab() {
                 </div>
                 <div style={{ display: 'flex', gap: '16px', background: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', border: '1px dashed var(--card-border)' }}>
                   <div className={styles.inputGroup} style={{ flex: 1 }}>
-                    <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', fontWeight: 700 }}>Lore Order</label>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', fontWeight: 700 }}>Timeline Position</label>
                     <input name="chronological_order" type="number" step="any" className={styles.input} placeholder="e.g. 1" style={{ background: 'var(--card-bg)' }} />
                   </div>
                 </div>
