@@ -453,6 +453,55 @@ export function LibraryTab() {
           </div>
         </div>
       )}
+      <AnimatePresence>
+        {pardonModalData && (
+          <motion.div 
+            className={styles.modalOverlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 1000 }}
+          >
+            <motion.div 
+              className={styles.modalContent}
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', overflow: 'hidden' }}
+            >
+              <div className={styles.modalHeader} style={{ background: 'linear-gradient(135deg, var(--card-bg), var(--bg-secondary))', borderBottom: '1px solid var(--card-border)' }}>
+                <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>Pardon Game</h3>
+                <motion.button whileHover={{ scale: 1.1, backgroundColor: 'var(--bg-secondary)' }} whileTap={{ scale: 0.9 }} onClick={() => setPardonModalData(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <X size={20} />
+                </motion.button>
+              </div>
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const reason = formData.get('pardon_reason') as string;
+                  handleUpdateStatus(pardonModalData.gameId, pardonModalData.currentStatus, 'pardoned', pardonModalData.gameTitle, reason);
+                  setPardonModalData(null);
+                }} 
+                className={styles.modalBody} 
+                style={{ padding: '24px' }}
+              >
+                <div style={{ marginBottom: '16px', fontSize: '15px', color: 'var(--text-secondary)' }}>
+                  Why are you pardoning <strong>{pardonModalData.gameTitle}</strong>? (Too grindy, lost interest, etc.)
+                </div>
+                <div className={styles.inputGroup}>
+                  <label style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', fontWeight: 700 }}>Reason *</label>
+                  <input required name="pardon_reason" className={styles.input} placeholder="e.g. Combat got repetitive" style={{ background: 'var(--bg-secondary)' }} autoFocus />
+                </div>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className={styles.primaryButton} style={{ marginTop: '16px', justifyContent: 'center', padding: '14px', fontSize: '16px', fontWeight: 700, borderRadius: '12px', width: '100%' }}>
+                  Confirm Pardon
+                </motion.button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
