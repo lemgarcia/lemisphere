@@ -336,7 +336,7 @@ export function GameDetailsTab() {
                     <input name="release_year" type="number" className={styles.input} defaultValue={game.release_year || ''} style={{ background: 'var(--card-bg)' }} />
                   </div>
                   <div className={styles.inputGroup} style={{ flex: 1 }}>
-                    <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', fontWeight: 700 }}>Lore Order</label>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', fontWeight: 700 }}>Timeline Position</label>
                     <input name="chronological_order" type="number" step="any" className={styles.input} defaultValue={game.chronological_order || ''} placeholder="e.g. 1" style={{ background: 'var(--card-bg)' }} />
                   </div>
                 </div>

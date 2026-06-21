@@ -225,7 +225,7 @@ export function SeriesTab() {
                       setEditingLoreOrderGame(game);
                     }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: '4px', display: 'flex', alignItems: 'center', marginLeft: 'auto' }}
-                    title="Edit Lore Order"
+                    title="Edit Timeline Position"
                   >
                     <Edit2 size={12} />
                   </button>
@@ -376,7 +376,7 @@ export function SeriesTab() {
                     <input name="release_year" type="number" className={styles.input} placeholder="2022" style={{ background: 'var(--card-bg)' }} />
                   </div>
                   <div className={styles.inputGroup} style={{ flex: 1 }}>
-                    <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', fontWeight: 700 }}>Lore Order</label>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', fontWeight: 700 }}>Timeline Position</label>
                     <input name="chronological_order" type="number" step="any" className={styles.input} placeholder="e.g. 1" style={{ background: 'var(--card-bg)' }} />
                   </div>
                 </div>
@@ -464,6 +464,58 @@ export function SeriesTab() {
             onCancel={() => setSeriesToDelete(null)}
           />
         )}
+
+        <AnimatePresence>
+          {editingLoreOrderGame && (
+            <motion.div 
+              className={styles.modalOverlay}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+            >
+              <motion.div 
+                className={styles.modalContent}
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', overflow: 'hidden', maxWidth: '350px' }}
+              >
+                <div className={styles.modalHeader} style={{ background: 'linear-gradient(135deg, var(--card-bg), var(--bg-secondary))', borderBottom: '1px solid var(--card-border)' }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>Edit Timeline Position</h3>
+                  <motion.button whileHover={{ scale: 1.1, backgroundColor: 'var(--bg-secondary)' }} whileTap={{ scale: 0.9 }} onClick={() => setEditingLoreOrderGame(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <X size={20} />
+                  </motion.button>
+                </div>
+                <form 
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const newOrderStr = formData.get('chronological_order') as string;
+                    const newOrder = newOrderStr ? Number(newOrderStr) : undefined;
+                    await db.games.update(editingLoreOrderGame.id, { chronological_order: newOrder, sync_status: 'pending', updated_at: new Date().toISOString() });
+                    syncManager.queueSync('gaming');
+                    setEditingLoreOrderGame(null);
+                  }} 
+                  className={styles.modalBody} 
+                  style={{ padding: '24px' }}
+                >
+                  <div style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+                    Set the timeline position for <strong>{editingLoreOrderGame.title}</strong>
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', fontWeight: 700 }}>Timeline Position</label>
+                    <input name="chronological_order" type="number" step="any" className={styles.input} defaultValue={editingLoreOrderGame.chronological_order || ''} placeholder="e.g. 1" style={{ background: 'var(--bg-secondary)' }} autoFocus />
+                  </div>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className={styles.primaryButton} style={{ marginTop: '16px', justifyContent: 'center', padding: '14px', fontSize: '16px', fontWeight: 700, borderRadius: '12px', width: '100%' }}>
+                    Save
+                  </motion.button>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -636,68 +688,6 @@ export function SeriesTab() {
                   Open Series Folder
                 </motion.button>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {seriesToDelete && (
-        <DeleteConfirmationModal
-          isOpen={!!seriesToDelete}
-          title="Delete Game Series"
-          message="Are you sure you want to delete this series? The games will remain in your library."
-          onConfirm={confirmDeleteSeries}
-          onCancel={() => setSeriesToDelete(null)}
-        />
-      )}
-
-      <AnimatePresence>
-        {editingLoreOrderGame && (
-          <motion.div 
-            className={styles.modalOverlay}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
-          >
-            <motion.div 
-              className={styles.modalContent}
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', overflow: 'hidden', maxWidth: '350px' }}
-            >
-              <div className={styles.modalHeader} style={{ background: 'linear-gradient(135deg, var(--card-bg), var(--bg-secondary))', borderBottom: '1px solid var(--card-border)' }}>
-                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>Edit Lore Order</h3>
-                <motion.button whileHover={{ scale: 1.1, backgroundColor: 'var(--bg-secondary)' }} whileTap={{ scale: 0.9 }} onClick={() => setEditingLoreOrderGame(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <X size={20} />
-                </motion.button>
-              </div>
-              <form 
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  const newOrderStr = formData.get('chronological_order') as string;
-                  const newOrder = newOrderStr ? Number(newOrderStr) : undefined;
-                  await db.games.update(editingLoreOrderGame.id, { chronological_order: newOrder, sync_status: 'pending', updated_at: new Date().toISOString() });
-                  syncManager.queueSync('gaming');
-                  setEditingLoreOrderGame(null);
-                }} 
-                className={styles.modalBody} 
-                style={{ padding: '24px' }}
-              >
-                <div style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                  Set the lore order for <strong>{editingLoreOrderGame.title}</strong>
-                </div>
-                <div className={styles.inputGroup}>
-                  <label style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', fontWeight: 700 }}>Lore Order</label>
-                  <input name="chronological_order" type="number" step="any" className={styles.input} defaultValue={editingLoreOrderGame.chronological_order || ''} placeholder="e.g. 1" style={{ background: 'var(--bg-secondary)' }} autoFocus />
-                </div>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className={styles.primaryButton} style={{ marginTop: '16px', justifyContent: 'center', padding: '14px', fontSize: '16px', fontWeight: 700, borderRadius: '12px', width: '100%' }}>
-                  Save
-                </motion.button>
-              </form>
             </motion.div>
           </motion.div>
         )}
