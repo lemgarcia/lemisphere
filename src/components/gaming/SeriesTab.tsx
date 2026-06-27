@@ -780,6 +780,15 @@ export function SeriesTab() {
         )}
       </AnimatePresence>
 
+      {seriesToDelete && (
+        <DeleteConfirmationModal
+          isOpen={!!seriesToDelete}
+          title="Delete Game Series"
+          message="Are you sure you want to delete this series? The games will remain in your library."
+          onConfirm={confirmDeleteSeries}
+          onCancel={() => setSeriesToDelete(null)}
+        />
+      )}
     </div>
   );
 }
