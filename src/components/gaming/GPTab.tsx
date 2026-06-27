@@ -126,7 +126,7 @@ export function GPTab() {
                     <span style={{ fontWeight: 700, color: '#991b1b', fontSize: '16px' }}>PlayWish → Playing</span>
                     <span style={{ fontSize: '13px', color: '#b91c1c' }}>Start a game from your wishlist</span>
                   </div>
-                  <span style={{ fontWeight: 900, color: 'white', background: 'linear-gradient(135deg, #ef4444, #dc2626)', padding: '6px 14px', borderRadius: '20px', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}>−50 GP</span>
+                  <span style={{ fontWeight: 900, color: 'white', background: 'linear-gradient(135deg, #ef4444, #dc2626)', padding: '6px 14px', borderRadius: '20px', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}>−10 GP</span>
                 </div>
                 
                 {/* Played / Tested */}

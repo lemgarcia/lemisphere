@@ -148,7 +148,7 @@ export function SeriesTab() {
     if (!series || series.is_completed) return;
     const userId = useAppStore.getState().userId || 'default';
     const gameCount = seriesGames.length;
-    const gpAmount = 5 * gameCount;
+    const gpAmount = 1 * gameCount;
 
     await db.transaction('rw', db.game_series, db.gp_transactions, async () => {
       await db.game_series.update(series.id, {
@@ -256,9 +256,9 @@ export function SeriesTab() {
                   className={styles.primaryButton}
                   style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#059669', border: '1px solid rgba(16, 185, 129, 0.3)' }}
                   onClick={() => series && handleMarkSeriesComplete(series, seriesGames)}
-                  title={`Mark complete — earn ${5 * seriesGames.length} GP`}
+                  title={`Mark complete — earn ${1 * seriesGames.length} GP`}
                 >
-                  <Trophy size={14} /> Mark Complete (+{5 * seriesGames.length} GP)
+                  <Trophy size={14} /> Mark Complete (+{1 * seriesGames.length} GP)
                 </button>
               )}
               <button className={styles.primaryButton} onClick={() => setShowAddGameModal(true)} style={{ background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--card-border)' }}>

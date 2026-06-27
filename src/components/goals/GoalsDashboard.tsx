@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { deleteAndTrack } from '@/lib/db/deleteAndTrack';
@@ -46,6 +46,11 @@ export function GoalsDashboard() {
   const [showModal, setShowModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
+
+  // Pull latest goal data immediately when this page is opened
+  useEffect(() => {
+    syncManager.syncAll();
+  }, []);
 
   const confirmDelete = async () => {
     if (goalToDelete) {

@@ -137,7 +137,7 @@ export function LibraryTab() {
     // Only charge if transitioning OUT of playwish/pardoned into an active state
     if (['playing', 'played', 'completed', 'mastered'].includes(newStatus)) {
       if ((currentStatus === 'playwish' || currentStatus === 'pardoned') && !hasStarted) {
-        addTxn(-50, 'Started Playing', 'started');
+        addTxn(-10, 'Started Playing', 'started');
       }
     }
 

@@ -129,7 +129,7 @@ export class SyncManager {
     }
     this.syncTimers.set(
       module,
-      setTimeout(() => this.performSync(module), 3000)
+      setTimeout(() => this.performSync(module), 800)
     );
   }
 
@@ -143,8 +143,7 @@ export class SyncManager {
   private async syncTable(
     dexieTable: Table<any, any>,
     supabaseTableName: string,
-    userId: string,
-    lastSyncAt?: string
+    userId: string
   ): Promise<boolean> {
     try {
       const allRecords = await dexieTable.toArray();
@@ -200,11 +199,8 @@ export class SyncManager {
         }
       }
 
-      // PULL
-      let query = supabase.from(supabaseTableName).select('*').eq('user_id', userId);
-      if (lastSyncAt) {
-        query = query.gt('updated_at', lastSyncAt);
-      }
+      // PULL — always fetch all records (no lastSyncAt filter) to guarantee cross-device consistency
+      const query = supabase.from(supabaseTableName).select('*').eq('user_id', userId);
 
       const { data: remoteRecords, error: pullError } = await query;
       if (pullError) {
@@ -358,8 +354,7 @@ export class SyncManager {
 
   private async syncTables(
     tables: ReturnType<typeof this.getModuleTables>,
-    userId: string,
-    lastSyncAt?: string
+    userId: string
   ): Promise<void> {
     const failedTables = new Set<string>();
 
@@ -370,7 +365,7 @@ export class SyncManager {
         continue;
       }
 
-      const success = await this.syncTable(t.dexie, t.supabase, userId, lastSyncAt);
+      const success = await this.syncTable(t.dexie, t.supabase, userId);
       if (!success) {
         failedTables.add(t.supabase);
       }
@@ -387,10 +382,9 @@ export class SyncManager {
     appStore.setSyncState({ isSyncing: true });
 
     const tables = this.getModuleTables(module);
-    const lastSyncAt = appStore.sync.lastSyncAt;
 
     await this.processDeletions();
-    await this.syncTables(tables, userId, lastSyncAt);
+    await this.syncTables(tables, userId);
 
     appStore.setSyncState({
       isSyncing: false,
@@ -513,10 +507,9 @@ export class SyncManager {
 
     await this.processDeletions();
 
-    const lastSyncAt = appStore.sync.lastSyncAt;
     for (const module of modules) {
       const tables = this.getModuleTables(module);
-      await this.syncTables(tables, userId, lastSyncAt);
+      await this.syncTables(tables, userId);
     }
 
     appStore.setSyncState({

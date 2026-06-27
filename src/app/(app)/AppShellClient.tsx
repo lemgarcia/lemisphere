@@ -111,12 +111,17 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 10000); // Check every 10 seconds
     
+    // Immediate sync on app load — pull all data right away so other-device changes are visible
+    if (useAppStore.getState().isAuthenticated) {
+      syncManager.syncAll();
+    }
+    
     // Global background sync polling
     const syncInterval = setInterval(() => {
       if (useAppStore.getState().isAuthenticated) {
         syncManager.syncAll();
       }
-    }, 4000); // Every 4 seconds
+    }, 3000); // Every 3 seconds
     
     return () => {
       clearInterval(timer);
