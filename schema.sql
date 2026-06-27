@@ -379,6 +379,7 @@ create table public.goals (
   icon text,
   color text,
   reward text,
+  sort_order integer,
   version integer default 1,
   device_id text,
   sync_status text,
