@@ -30,7 +30,7 @@ const ALLOWED_COLUMNS_PER_TABLE: Record<string, string[]> = {
   workout_exercise_logs: ['id', 'user_id', 'workout_log_id', 'exercise_id', 'weight', 'completed', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   body_metrics: ['id', 'user_id', 'date', 'weight', 'notes', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   
-  game_series: ['id', 'user_id', 'name', 'description', 'cover_url', 'is_favorite', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
+  game_series: ['id', 'user_id', 'name', 'description', 'cover_url', 'is_favorite', 'is_completed', 'completed_at', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   games: ['id', 'user_id', 'title', 'series_id', 'platform', 'status', 'cover_url', 'genre', 'release_year', 'chronological_order', 'personal_rating', 'notes', 'links', 'pardon_reason', 'gp_earned', 'started_at', 'completed_at', 'hours_played', 'is_favorite', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   game_sessions: ['id', 'user_id', 'game_id', 'date', 'duration', 'notes', 'gp_gained', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   gp_transactions: ['id', 'user_id', 'game_id', 'amount', 'reason', 'type', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],

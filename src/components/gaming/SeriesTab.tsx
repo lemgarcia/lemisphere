@@ -5,12 +5,13 @@ import { generateId } from '@/utils';
 import { deleteAndTrack } from '@/lib/db/deleteAndTrack';
 import { syncManager } from '@/lib/sync/SyncManager';
 import { useGamingStore } from '@/stores/gamingStore';
-import { Plus, X, Star, Search, Trash2, Edit2, Folder, Image as ImageIcon } from 'lucide-react';
+import { Plus, X, Star, Search, Trash2, Edit2, Folder, Image as ImageIcon, Trophy, CheckCircle } from 'lucide-react';
 import styles from './Gaming.module.css';
 import type { GameStatus, GamePlatform, GameSeries } from '@/types/modules';
 import { useAppStore } from '@/stores/appStore';
 import { DeleteConfirmationModal } from '@/components/ui/Modal/DeleteConfirmationModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 
 const PLATFORMS: GamePlatform[] = ['PC', 'PS5', 'PS4', 'Switch', 'Xbox', 'Mobile', 'Other'];
 
@@ -75,6 +76,7 @@ export function SeriesTab() {
       version: 1,
       device_id: 'default'
     });
+    syncManager.queueSync('gaming');
     setShowAddModal(false);
     setCoverPreview(null);
   };
@@ -87,8 +89,10 @@ export function SeriesTab() {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       cover_url: coverPreview || (formData.get('cover_url') as string) || undefined,
+      sync_status: 'pending',
       updated_at: new Date().toISOString()
     });
+    syncManager.queueSync('gaming');
     setShowEditModal(false);
     setCoverPreview(null);
   };
@@ -135,8 +139,63 @@ export function SeriesTab() {
       version: 1,
       device_id: 'default',
     });
+    syncManager.queueSync('gaming');
     setShowAddGameModal(false);
     setCoverPreview(null);
+  };
+
+  const handleMarkSeriesComplete = async (series: GameSeries, seriesGames: any[]) => {
+    if (!series || series.is_completed) return;
+    const userId = useAppStore.getState().userId || 'default';
+    const gameCount = seriesGames.length;
+    const gpAmount = 5 * gameCount;
+
+    await db.transaction('rw', db.game_series, db.gp_transactions, async () => {
+      await db.game_series.update(series.id, {
+        is_completed: true,
+        completed_at: new Date().toISOString(),
+        sync_status: 'pending',
+        updated_at: new Date().toISOString(),
+      });
+      await db.gp_transactions.add({
+        id: generateId(),
+        user_id: userId,
+        game_id: undefined as any, // series completion, not a game
+        amount: gpAmount,
+        reason: `Series Completed: ${series.name} (${gameCount} game${gameCount !== 1 ? 's' : ''})`,
+        type: 'series_complete',
+        sync_status: 'pending',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        version: 1,
+        device_id: 'default',
+      });
+    });
+
+    syncManager.queueSync('gaming');
+
+    // Confetti celebration
+    const duration = 3 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+    const interval: any = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+      if (timeLeft <= 0) return clearInterval(interval);
+      const particleCount = 50 * (timeLeft / duration);
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+    }, 250);
+  };
+
+  const handleUnmarkSeriesComplete = async (seriesId: string) => {
+    await db.game_series.update(seriesId, {
+      is_completed: false,
+      completed_at: undefined,
+      sync_status: 'pending',
+      updated_at: new Date().toISOString(),
+    });
+    syncManager.queueSync('gaming');
   };
 
   if (selectedSeriesId) {
@@ -163,7 +222,14 @@ export function SeriesTab() {
             <button onClick={() => setSelectedSeriesId(null)} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', marginBottom: '8px' }}>
               ← Back to Series
             </button>
-            <div className={styles.title}>{series?.name}</div>
+            <div className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {series?.name}
+              {series?.is_completed && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 700, color: '#10b981', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '20px', padding: '3px 10px' }}>
+                  <CheckCircle size={12} /> Completed
+                </span>
+              )}
+            </div>
             <div style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>{series?.description}</div>
           </div>
           <div style={{ display: 'flex', gap: '8px', flexDirection: 'column', alignItems: 'flex-end' }}>
@@ -171,11 +237,30 @@ export function SeriesTab() {
               <button 
                 className={styles.primaryButton} 
                 style={{ background: series?.is_favorite ? 'var(--mod-gaming-light)' : 'rgba(255,255,255,0.5)', color: series?.is_favorite ? 'var(--mod-gaming-primary)' : 'var(--text-tertiary)', border: '1px solid var(--card-border)' }}
-                onClick={() => db.game_series.update(series!.id, { is_favorite: !series?.is_favorite })}
+                onClick={() => db.game_series.update(series!.id, { is_favorite: !series?.is_favorite, sync_status: 'pending', updated_at: new Date().toISOString() })}
                 title="Toggle Favorite"
               >
                 <Star size={14} fill={series?.is_favorite ? "currentColor" : "none"} />
               </button>
+              {series?.is_completed ? (
+                <button
+                  className={styles.primaryButton}
+                  style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)' }}
+                  onClick={() => series && handleUnmarkSeriesComplete(series.id)}
+                  title="Unmark as complete"
+                >
+                  <CheckCircle size={14} /> Completed
+                </button>
+              ) : (
+                <button
+                  className={styles.primaryButton}
+                  style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#059669', border: '1px solid rgba(16, 185, 129, 0.3)' }}
+                  onClick={() => series && handleMarkSeriesComplete(series, seriesGames)}
+                  title={`Mark complete — earn ${5 * seriesGames.length} GP`}
+                >
+                  <Trophy size={14} /> Mark Complete (+{5 * seriesGames.length} GP)
+                </button>
+              )}
               <button className={styles.primaryButton} onClick={() => setShowAddGameModal(true)} style={{ background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--card-border)' }}>
                 <Plus size={14} /> New Game
               </button>

@@ -137,6 +137,10 @@ export class LemisphereDB extends Dexie {
       trick_progress: null,
       training_blueprints: null,
     });
+
+    this.version(11).stores({
+      game_series: 'id, user_id, is_completed, sync_status, updated_at',
+    });
   }
 }
 

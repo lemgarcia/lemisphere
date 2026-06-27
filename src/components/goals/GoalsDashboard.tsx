@@ -396,11 +396,11 @@ function GoalCard({ goal, skills, onEdit, onDelete, dragHandleProps }: { goal: G
     
     if (newProgress === 100 && goal.status !== 'completed') {
       triggerConfetti(true);
-      await db.goals.update(goal.id, { progress: newProgress, status: 'completed' });
+      await db.goals.update(goal.id, { progress: newProgress, status: 'completed', sync_status: 'pending', updated_at: new Date().toISOString() });
     } else if (newProgress < 100 && goal.status === 'completed') {
-      await db.goals.update(goal.id, { progress: newProgress, status: 'active' });
+      await db.goals.update(goal.id, { progress: newProgress, status: 'active', sync_status: 'pending', updated_at: new Date().toISOString() });
     } else {
-      await db.goals.update(goal.id, { progress: newProgress });
+      await db.goals.update(goal.id, { progress: newProgress, sync_status: 'pending', updated_at: new Date().toISOString() });
     }
     syncManager.queueSync('goals');
   };

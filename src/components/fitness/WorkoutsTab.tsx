@@ -38,6 +38,11 @@ export function WorkoutsTab() {
     }
   }, [activeProgram, selectedSet]);
 
+  // On mount: pull latest fitness data from Supabase so cross-device progress is visible immediately
+  useEffect(() => {
+    syncManager.queueSync('fitness');
+  }, []);
+
   // 2. Fetch Days for Program
   const days = useLiveQuery(async () => {
     if (!activeProgram) return [];
@@ -112,21 +117,37 @@ export function WorkoutsTab() {
     return await db.workout_exercise_logs.where('workout_log_id').equals(currentLog.id).filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray();
   }, [currentLog?.id]);
 
-  // 6. Previous Weights
+  // 6. Previous Weights — fetch the most recent weight for each exercise from PREVIOUS sets only
+  // so that the current set's own entries don't mask the carry-forward value.
   const previousWeights = useLiveQuery(async () => {
-    if (!exercises) return {};
+    if (!exercises || !activeProgram || !selectedSet) return {};
     const map: Record<string, number> = {};
+
+    // Get all workout_logs for this program that belong to a PREVIOUS set
+    const previousLogs = await db.workout_logs
+      .filter(l => l.program_id === activeProgram.id && l.set_number < selectedSet)
+      .toArray();
+    const previousLogIds = new Set(previousLogs.map(l => l.id));
+
     for (const ex of exercises) {
-      const lastLog = await db.workout_exercise_logs
+      // Get all exercise logs for this exercise from previous sets
+      const previousExLogs = await db.workout_exercise_logs
         .where('exercise_id').equals(ex.id)
-        .reverse()
-        .first();
-      if (lastLog && Number(lastLog.weight) > 0) {
-        map[ex.id] = lastLog.weight as any;
+        .filter(l => previousLogIds.has(l.workout_log_id) && Number(l.weight) > 0)
+        .toArray();
+
+      if (previousExLogs.length > 0) {
+        // Pick the most recent one by looking at the workout_log's set_number
+        const logsWithSet = previousExLogs.map(el => {
+          const parentLog = previousLogs.find(pl => pl.id === el.workout_log_id);
+          return { ...el, set_number: parentLog?.set_number ?? 0 };
+        });
+        logsWithSet.sort((a, b) => b.set_number - a.set_number);
+        map[ex.id] = logsWithSet[0].weight as any;
       }
     }
     return map;
-  }, [exercises]);
+  }, [exercises, activeProgram?.id, selectedSet]);
 
   const toggleExercise = async (exerciseId: string, currentWeight: number | string) => {
     if (!activeProgram || !selectedDayId || !selectedSet) return;

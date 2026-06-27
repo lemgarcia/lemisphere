@@ -68,6 +68,8 @@ export interface GameSeries extends BaseRecord {
   description?: string;
   cover_url?: string;
   is_favorite?: boolean;
+  is_completed?: boolean;
+  completed_at?: string;
 }
 
 export interface GameLink {
@@ -108,7 +110,7 @@ export interface GPTransaction extends BaseRecord {
   game_id?: string;
   amount: number;           // positive = gain, negative = loss
   reason: string;
-  type: 'started' | 'completed' | 'achievement' | 'hundred_percent' | 'milestone' | 'bonus' | 'played' | 'skipped';
+  type: 'started' | 'completed' | 'achievement' | 'hundred_percent' | 'milestone' | 'bonus' | 'played' | 'skipped' | 'series_complete';
 }
 
 // ── Budgie ───────────────────────────────────────────────────────────────────

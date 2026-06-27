@@ -135,6 +135,8 @@ create table public.game_series (
   description text,
   cover_url text,
   is_favorite boolean default false,
+  is_completed boolean default false,
+  completed_at timestamp with time zone,
   version integer default 1,
   device_id text,
   sync_status text,
