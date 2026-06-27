@@ -121,7 +121,7 @@ export function WorkoutsTab() {
   // so that the current set's own entries don't mask the carry-forward value.
   const previousWeights = useLiveQuery(async () => {
     if (!exercises || !activeProgram || !selectedSet) return {};
-    const map: Record<string, number> = {};
+    const map: Record<string, string> = {};
 
     // Get all workout_logs for this program that belong to a PREVIOUS set
     const previousLogs = await db.workout_logs
@@ -133,7 +133,7 @@ export function WorkoutsTab() {
       // Get all exercise logs for this exercise from previous sets
       const previousExLogs = await db.workout_exercise_logs
         .where('exercise_id').equals(ex.id)
-        .filter(l => previousLogIds.has(l.workout_log_id) && Number(l.weight) > 0)
+        .filter(l => previousLogIds.has(l.workout_log_id) && l.weight !== undefined && l.weight !== null && l.weight !== '')
         .toArray();
 
       if (previousExLogs.length > 0) {
@@ -143,7 +143,7 @@ export function WorkoutsTab() {
           return { ...el, set_number: parentLog?.set_number ?? 0 };
         });
         logsWithSet.sort((a, b) => b.set_number - a.set_number);
-        map[ex.id] = logsWithSet[0].weight as any;
+        map[ex.id] = String(logsWithSet[0].weight);
       }
     }
     return map;
