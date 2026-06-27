@@ -101,7 +101,9 @@ export function SeriesTab() {
     if (seriesToDelete) {
       try {
         await db.games.where('series_id').equals(seriesToDelete).modify(game => {
-          delete game.series_id;
+          game.series_id = undefined;
+          game.sync_status = 'pending';
+          game.updated_at = new Date().toISOString();
         });
         await deleteAndTrack('game_series', seriesToDelete);
         syncManager.queueSync('gaming');
