@@ -243,26 +243,33 @@ function RewardsTab() {
 
       {/* Balance Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, var(--mod-goals-primary), var(--mod-goals-dark))',
-        borderRadius: '16px',
-        padding: '28px 32px',
+        background: 'linear-gradient(135deg, #1e1b4b, #312e81)',
+        borderRadius: '20px',
+        padding: '32px 40px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+        boxShadow: '0 20px 40px rgba(49, 46, 129, 0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
+        border: '1px solid rgba(255,255,255,0.05)',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-        <div>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
-            Reward XP Balance
+        {/* Glow effect */}
+        <div style={{ position: 'absolute', top: '-50%', left: '-10%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(139,92,246,0.4) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+        <div style={{ position: 'absolute', bottom: '-50%', right: '-10%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(245,158,11,0.25) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ fontSize: '14px', fontWeight: 800, color: '#a5b4fc', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Sparkles size={16} color="#fbbf24" /> Reward XP Balance
           </div>
-          <div style={{ fontSize: '48px', fontWeight: 900, color: '#fff', lineHeight: 1 }}>
-            {rewardXp.toLocaleString()} <span style={{ fontSize: '20px', fontWeight: 600, opacity: 0.8 }}>RXP</span>
+          <div style={{ fontSize: '56px', fontWeight: 900, color: '#fff', lineHeight: 1, textShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
+            {rewardXp.toLocaleString()} <span style={{ fontSize: '24px', fontWeight: 700, color: '#fcd34d' }}>RXP</span>
           </div>
-          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.65)', marginTop: '8px' }}>
+          <div style={{ fontSize: '14px', color: '#818cf8', marginTop: '12px', fontWeight: 500 }}>
             Earned from completing skill tasks. Spend on rewards — never affects Skill XP.
           </div>
         </div>
-        <div style={{ fontSize: '64px', opacity: 0.3 }}>✨</div>
+        <div style={{ fontSize: '80px', opacity: 0.9, position: 'relative', zIndex: 1, filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.3))' }}>🎁</div>
       </div>
 
       {redeemError && (
@@ -417,7 +424,7 @@ function ManageRewardsModal({ rewards, onClose, onSave }: {
   const [showPicker, setShowPicker] = useState(false);
   const [toDelete, setToDelete] = useState<string | null>(null);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!name.trim() || !cost) return;
     const newReward: CustomReward = {
       id: generateId(),
@@ -426,18 +433,19 @@ function ManageRewardsModal({ rewards, onClose, onSave }: {
       cost: Number(cost),
       icon,
     };
-    setList(prev => [...prev, newReward]);
+    const newList = [...list, newReward];
+    setList(newList);
     setName(''); setDesc(''); setCost(''); setIcon('🎁');
+    await onSave(newList);
   };
 
-  const handleDeleteConfirm = () => {
-    if (toDelete) setList(prev => prev.filter(r => r.id !== toDelete));
+  const handleDeleteConfirm = async () => {
+    if (toDelete) {
+      const newList = list.filter(r => r.id !== toDelete);
+      setList(newList);
+      await onSave(newList);
+    }
     setToDelete(null);
-  };
-
-  const handleSave = async () => {
-    await onSave(list);
-    onClose();
   };
 
   return (
@@ -558,12 +566,9 @@ function ManageRewardsModal({ rewards, onClose, onSave }: {
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--card-border)', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-          <button onClick={onClose} style={{ padding: '10px 20px', background: 'var(--bg-secondary)', border: '1px solid var(--card-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px' }}>
-            Cancel
-          </button>
-          <button onClick={handleSave} className={styles.primaryButton} style={{ padding: '10px 24px', fontSize: '15px', fontWeight: 700 }}>
-            Save Changes
+        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--card-border)', display: 'flex', justifyContent: 'flex-end' }}>
+          <button onClick={onClose} className={styles.primaryButton} style={{ padding: '10px 24px', fontSize: '15px', fontWeight: 700 }}>
+            Done
           </button>
         </div>
       </div>
