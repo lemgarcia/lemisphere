@@ -37,25 +37,80 @@ const ALL_EMOJIS = [
 ];
 
 function getSkillBracket(xp: number): { level: SkillLevel; min: number; max: number } {
-  if (xp < 1000) return { level: 'beginner', min: 0, max: 1000 };
-  if (xp < 5000) return { level: 'intermediate', min: 1000, max: 5000 };
-  if (xp < 20000) return { level: 'advanced', min: 5000, max: 20000 };
-  if (xp < 50000) return { level: 'expert', min: 20000, max: 50000 };
-  return { level: 'master', min: 50000, max: 100000 };
+  if (xp < 1000)  return { level: 'beginner',     min: 0,     max: 1000  };
+  if (xp < 4000)  return { level: 'intermediate', min: 1000,  max: 4000  };
+  if (xp < 12000) return { level: 'advanced',     min: 4000,  max: 12000 };
+  if (xp < 30000) return { level: 'expert',       min: 12000, max: 30000 };
+  return { level: 'master', min: 30000, max: 100000 };
 }
 
 function getBaseXpForLevel(level: SkillLevel): number {
-  if (level === 'beginner') return 0;
+  if (level === 'beginner')     return 0;
   if (level === 'intermediate') return 1000;
-  if (level === 'advanced') return 5000;
-  if (level === 'expert') return 20000;
-  if (level === 'master') return 50000;
+  if (level === 'advanced')     return 4000;
+  if (level === 'expert')       return 12000;
+  if (level === 'master')       return 30000;
   return 0;
 }
 
-const getDiffClass = (diff: string) => diff === 'easy' ? styles.diffEasy : diff === 'mid' ? styles.diffMid : diff === 'hard' ? styles.diffHard : styles.diffExtreme;
-const difficultyMap: Record<TaskDifficulty, number> = { easy: 10, mid: 25, hard: 50, extreme: 100 };
-const getDiffXpNum = (diff: TaskDifficulty | string) => difficultyMap[diff as TaskDifficulty] || 10;
+// Maps both new and legacy difficulty names to XP values
+const difficultyMap: Record<string, number> = {
+  // Practice tasks
+  tiny:        5,
+  small:       10,
+  focused:     25,
+  challenging: 50,
+  // Achievement tasks
+  minor:       100,
+  significant: 200,
+  exceptional: 300,
+  // Legacy (keep working until migrated)
+  easy:        10,
+  mid:         25,
+  hard:        50,
+  extreme:     100,
+};
+
+// Migrate old difficulty labels to new ones
+function migrateDifficulty(diff: string): TaskDifficulty {
+  switch (diff) {
+    case 'easy':    return 'small';
+    case 'mid':     return 'focused';
+    case 'hard':    return 'challenging';
+    case 'extreme': return 'minor';
+    default:        return diff as TaskDifficulty;
+  }
+}
+
+const getDiffXpNum = (diff: string) => difficultyMap[diff] ?? 10;
+
+const PRACTICE_DIFFS: TaskDifficulty[]     = ['tiny', 'small', 'focused', 'challenging'];
+const ACHIEVEMENT_DIFFS: TaskDifficulty[]  = ['minor', 'significant', 'exceptional'];
+
+function getDiffClass(diff: string): string {
+  if (diff === 'tiny')        return styles.diffTiny;
+  if (diff === 'small')       return styles.diffEasy;
+  if (diff === 'focused')     return styles.diffMid;
+  if (diff === 'challenging') return styles.diffHard;
+  if (diff === 'minor')       return styles.diffHard;
+  if (diff === 'significant') return styles.diffExtreme;
+  if (diff === 'exceptional') return styles.diffExtreme;
+  // Legacy fallback
+  if (diff === 'easy')    return styles.diffEasy;
+  if (diff === 'mid')     return styles.diffMid;
+  if (diff === 'hard')    return styles.diffHard;
+  if (diff === 'extreme') return styles.diffExtreme;
+  return styles.diffEasy;
+}
+
+function getDiffLabel(diff: string): string {
+  const labels: Record<string, string> = {
+    tiny: 'Tiny (Practice)', small: 'Small (Practice)', focused: 'Focused (Practice)', challenging: 'Challenging (Practice)',
+    minor: 'Minor (Achievement)', significant: 'Significant (Achievement)', exceptional: 'Exceptional (Achievement)',
+    easy: 'Small (Practice)', mid: 'Focused (Practice)', hard: 'Challenging (Practice)', extreme: 'Minor (Achievement)',
+  };
+  return labels[diff] ?? diff;
+}
 
 // ── Sortable Skill Card Component ──────────────────────────────────────────────
 
@@ -77,13 +132,21 @@ function SortableSkillCard({ skill, onEdit, onDelete, onToggleChecklist }: Sorta
   };
 
   const bracket = getSkillBracket(skill.xp);
-  const progressPercent = bracket.level === 'expert' ? 100 : ((skill.xp - bracket.min) / (bracket.max - bracket.min)) * 100;
+  const progressPercent = bracket.level === 'master'
+    ? Math.min(100, ((skill.xp - bracket.min) / (bracket.max - bracket.min)) * 100)
+    : ((skill.xp - bracket.min) / (bracket.max - bracket.min)) * 100;
 
   let cardThemeClass = styles.skillCardBeginner;
   if (bracket.level === 'intermediate') cardThemeClass = styles.skillCardIntermediate;
   if (bracket.level === 'advanced') cardThemeClass = styles.skillCardAdvanced;
   if (bracket.level === 'expert') cardThemeClass = styles.skillCardExpert;
   if (bracket.level === 'master') cardThemeClass = styles.skillCardMaster;
+
+  // Migrate legacy difficulties for display
+  const displayChecklist = (skill.checklist || []).map(item => ({
+    ...item,
+    difficulty: migrateDifficulty(item.difficulty || 'small') as TaskDifficulty,
+  }));
 
   return (
     <div ref={setNodeRef} style={style} className={`${styles.skillCard} ${cardThemeClass}`}>
@@ -115,10 +178,10 @@ function SortableSkillCard({ skill, onEdit, onDelete, onToggleChecklist }: Sorta
         </div>
       )}
 
-      {skill.checklist && skill.checklist.length > 0 && (
+      {displayChecklist.length > 0 && (
         <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tasks</div>
-          {skill.checklist.map(item => (
+          {displayChecklist.map(item => (
             <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
               {item.target_amount ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--canvas-bg)', padding: '2px', borderRadius: '6px', border: '1px solid var(--card-border)', marginTop: '2px' }}>
@@ -167,14 +230,16 @@ function SortableSkillCard({ skill, onEdit, onDelete, onToggleChecklist }: Sorta
                 <span style={{ fontSize: '14px', color: item.completed ? 'var(--text-tertiary)' : 'var(--text-primary)', textDecoration: item.completed ? 'line-through' : 'none' }}>
                   {item.text} {item.repeats && item.repeats > 1 ? `(x${item.repeats})` : ''}
                 </span>
-                <span className={`${styles.difficultyBadge} ${getDiffClass(item.difficulty || 'easy')}`} style={{ alignSelf: 'flex-start' }}>
-                  {item.difficulty || 'easy'} ({item.target_amount ? getDiffXpNum(item.difficulty || 'easy') * item.target_amount : getDiffXpNum(item.difficulty || 'easy') * (item.repeats || 1)} XP)
+                <span className={`${styles.difficultyBadge} ${getDiffClass(item.difficulty || 'small')}`} style={{ alignSelf: 'flex-start' }}>
+                  {getDiffLabel(item.difficulty || 'small')} &mdash; {item.target_amount ? getDiffXpNum(item.difficulty || 'small') * item.target_amount : getDiffXpNum(item.difficulty || 'small') * (item.repeats || 1)} XP
                 </span>
               </div>
             </div>
           ))}
         </div>
       )}
+
+
 
       {skill.links && skill.links.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
@@ -286,7 +351,8 @@ export function SkillsTab() {
     if (!skill) return;
     
     const task = skill.checklist?.find(i => i.id === itemId);
-    const xpPerClick = task ? (difficultyMap[task.difficulty || 'easy'] || 10) * (task.repeats || 1) : 10;
+    const diff = migrateDifficulty(task?.difficulty || 'small');
+    const xpPerClick = getDiffXpNum(diff) * (task?.repeats || 1);
     
     let xpDelta = 0;
     let targetGoalId: string | undefined = undefined;
@@ -324,6 +390,22 @@ export function SkillsTab() {
       updated_at: new Date().toISOString()
     });
     syncManager.queueSync('habits');
+
+    // Grant Reward XP equal to Skill XP earned (only positive gains)
+    if (xpDelta > 0) {
+      const userId = useAppStore.getState().userId || 'default';
+      const prefId = userId;
+      const existing = await db.user_preferences.get(prefId);
+      if (existing) {
+        const newRewardXp = (existing.reward_xp || 0) + xpDelta;
+        await db.user_preferences.update(prefId, {
+          reward_xp: newRewardXp,
+          sync_status: 'pending',
+          updated_at: new Date().toISOString(),
+        });
+        syncManager.queueSync('dashboard');
+      }
+    }
 
     // Cross-module Sync: Update Goal if linked
     if (targetGoalId) {
@@ -536,9 +618,9 @@ export function SkillsTab() {
                   <select name="starting_level" className={styles.input} defaultValue="beginner">
                     <option value="beginner">Beginner (0 XP)</option>
                     <option value="intermediate">Intermediate (1,000 XP)</option>
-                    <option value="advanced">Advanced (5,000 XP)</option>
-                    <option value="expert">Expert (20,000 XP)</option>
-                    <option value="master">Master (50,000 XP)</option>
+                    <option value="advanced">Advanced (4,000 XP)</option>
+                    <option value="expert">Expert (12,000 XP)</option>
+                    <option value="master">Master (30,000 XP)</option>
                   </select>
                 </div>
               )}
@@ -565,10 +647,17 @@ export function SkillsTab() {
                     value={newItemDifficulty} 
                     onChange={e => setNewItemDifficulty(e.target.value as TaskDifficulty)}
                   >
-                    <option value="easy">Easy (10 XP)</option>
-                    <option value="mid">Mid (25 XP)</option>
-                    <option value="hard">Hard (50 XP)</option>
-                    <option value="extreme">Extreme (100 XP)</option>
+                    <optgroup label="— Practice Tasks —">
+                      <option value="tiny">Tiny (5 XP)</option>
+                      <option value="small">Small (10 XP)</option>
+                      <option value="focused">Focused (25 XP)</option>
+                      <option value="challenging">Challenging (50 XP)</option>
+                    </optgroup>
+                    <optgroup label="— Achievement Tasks —">
+                      <option value="minor">Minor (100 XP)</option>
+                      <option value="significant">Significant (200 XP)</option>
+                      <option value="exceptional">Exceptional (300 XP)</option>
+                    </optgroup>
                   </select>
                   <input
                     type="number"
@@ -598,8 +687,8 @@ export function SkillsTab() {
                               onChange={e => handleEditChecklistText(item.id, e.target.value)}
                             />
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <span className={`${styles.difficultyBadge} ${getDiffClass(item.difficulty || 'easy')}`}>
-                                {item.difficulty || 'easy'} ({item.target_amount ? getDiffXpNum(item.difficulty || 'easy') * item.target_amount : getDiffXpNum(item.difficulty || 'easy') * (item.repeats || 1)} XP)
+                              <span className={`${styles.difficultyBadge} ${getDiffClass(item.difficulty || 'small')}`}>
+                                {getDiffLabel(item.difficulty || 'small')} — {item.target_amount ? getDiffXpNum(item.difficulty || 'small') * item.target_amount : getDiffXpNum(item.difficulty || 'small') * (item.repeats || 1)} XP
                               </span>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Target:</span>

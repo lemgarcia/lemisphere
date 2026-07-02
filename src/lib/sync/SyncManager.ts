@@ -43,7 +43,7 @@ const ALLOWED_COLUMNS_PER_TABLE: Record<string, string[]> = {
   goals: ['id', 'user_id', 'title', 'description', 'category', 'status', 'progress', 'is_auto_progress', 'target_date', 'milestones', 'icon', 'color', 'reward', 'sort_order', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   todos: ['id', 'user_id', 'text', 'is_completed', 'position', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
   calendar_events: ['id', 'user_id', 'day', 'date', 'time', 'activity', 'type', 'notes', 'repeat', 'remind_at', 'event_notified', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
-  user_preferences: ['id', 'user_id', 'dashboard_layout', 'quick_nav_order', 'hidden_quick_nav', 'budgie_food_rotation', 'budgie_daily_routine', 'monitored_habit_id', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
+  user_preferences: ['id', 'user_id', 'dashboard_layout', 'quick_nav_order', 'hidden_quick_nav', 'budgie_food_rotation', 'budgie_daily_routine', 'monitored_habit_id', 'reward_xp', 'custom_rewards', 'reward_logs', 'version', 'device_id', 'sync_status', 'created_at', 'updated_at'],
 };
 
 const DEFAULTS_PER_TABLE: Record<string, Record<string, unknown>> = {

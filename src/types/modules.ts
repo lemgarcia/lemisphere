@@ -215,7 +215,10 @@ export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert' | '
 export type SkillStatus = 'learning' | 'mastered' | 'on_hold' | 'stopped';
 export type SkillCategory = 'Technical' | 'Creative' | 'Self' | 'Upskill' | 'Talent' | 'Reinforcement';
 
-export type TaskDifficulty = 'easy' | 'mid' | 'hard' | 'extreme';
+// Practice tasks: Tiny/Small/Focused/Challenging
+// Achievement tasks: Minor/Significant/Exceptional
+// Legacy (migrated): easy→small, mid→focused, hard→challenging, extreme→minor
+export type TaskDifficulty = 'tiny' | 'small' | 'focused' | 'challenging' | 'minor' | 'significant' | 'exceptional' | 'easy' | 'mid' | 'hard' | 'extreme';
 
 export interface ChecklistItem {
   id: string;
@@ -307,6 +310,22 @@ export interface AuthUser extends BaseRecord {
   password_hash: string;
 }
 
+export interface CustomReward {
+  id: string;
+  name: string;
+  description?: string;
+  cost: number; // in Reward XP
+  icon?: string;
+}
+
+export interface RewardLog {
+  id: string;
+  reward_id: string;
+  reward_name: string;
+  reward_cost: number;
+  redeemed_at: string; // ISO string
+}
+
 export interface UserPreferences extends BaseRecord {
   dashboard_layout: any[];
   quick_nav_order: string[];
@@ -314,4 +333,8 @@ export interface UserPreferences extends BaseRecord {
   budgie_food_rotation?: any[];
   budgie_daily_routine?: any[];
   monitored_habit_id?: string;
+  // Reward XP system
+  reward_xp?: number;
+  custom_rewards?: CustomReward[];
+  reward_logs?: RewardLog[];
 }

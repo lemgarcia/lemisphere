@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { deleteAndTrack } from '@/lib/db/deleteAndTrack';
 import { syncManager } from '@/lib/sync/SyncManager';
 import { generateId } from '@/utils';
-import { Plus, Target, CheckCircle, Clock, ChevronDown, ChevronRight, X, Calendar, Edit2, Trash2, Gift, GripVertical } from 'lucide-react';
+import { Plus, Target, CheckCircle, Clock, ChevronDown, ChevronRight, X, Calendar, Edit2, Trash2, Gift, GripVertical, Star, ShoppingBag, History, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { 
   DndContext, 
@@ -22,7 +22,7 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { Goal, Milestone, GoalTask, GoalStatus, GoalCategory } from '@/types/modules';
+import type { Goal, Milestone, GoalTask, GoalStatus, GoalCategory, CustomReward, RewardLog } from '@/types/modules';
 import styles from './Goals.module.css';
 import { useAppStore } from '@/stores/appStore';
 import { DeleteConfirmationModal } from '@/components/ui/Modal/DeleteConfirmationModal';
@@ -42,12 +42,12 @@ const getDifficultyColor = (diff?: string) => {
 export function GoalsDashboard() {
   const goals = useLiveQuery(() => db.goals.filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray());
   const skills = useLiveQuery(() => db.skills.filter(x => x.user_id === (useAppStore.getState().userId || 'default')).toArray());
-  const [activeTab, setActiveTab] = useState<GoalStatus>('active');
+  const [activeTab, setActiveTab] = useState<GoalStatus | 'rewards'>('active');
   const [showModal, setShowModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
 
-  // Pull latest goal data immediately when this page is opened
+  // Pull latest data immediately when this page is opened
   useEffect(() => {
     syncManager.syncAll();
   }, []);
@@ -143,48 +143,445 @@ export function GoalsDashboard() {
             {status}
           </button>
         ))}
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'rewards' ? styles.active : ''}`}
+          onClick={() => setActiveTab('rewards')}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          <Sparkles size={14} /> Rewards
+        </button>
       </div>
 
-      <div className={styles.goalsGrid}>
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={filteredGoals.map(g => g.id)} strategy={rectSortingStrategy}>
-            {filteredGoals.map(goal => (
-              <SortableGoalCard 
-                key={goal.id} 
-                goal={goal} 
-                skills={skills || []}
-                onEdit={() => { setEditingGoal(goal); setShowModal(true); }}
-                onDelete={() => setGoalToDelete(goal)}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
-        {filteredGoals.length === 0 && (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)', gridColumn: '1 / -1' }}>
-            No {activeTab} goals found.
+      {activeTab === 'rewards' ? (
+        <RewardsTab />
+      ) : (
+        <>
+          <div className={styles.goalsGrid}>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={filteredGoals.map(g => g.id)} strategy={rectSortingStrategy}>
+                {filteredGoals.map(goal => (
+                  <SortableGoalCard 
+                    key={goal.id} 
+                    goal={goal} 
+                    skills={skills || []}
+                    onEdit={() => { setEditingGoal(goal); setShowModal(true); }}
+                    onDelete={() => setGoalToDelete(goal)}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+            {filteredGoals.length === 0 && (
+              <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)', gridColumn: '1 / -1' }}>
+                No {activeTab} goals found.
+              </div>
+            )}
           </div>
-        )}
+
+          {showModal && (
+            <GoalModal 
+              goal={editingGoal} 
+              onClose={() => setShowModal(false)} 
+            />
+          )}
+
+          {goalToDelete && (
+            <DeleteConfirmationModal
+              isOpen={!!goalToDelete}
+              title="Delete Goal"
+              message={`Are you sure you want to delete "${goalToDelete.title}"? All milestones and progress will be lost.`}
+              onConfirm={confirmDelete}
+              onCancel={() => setGoalToDelete(null)}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Rewards Tab ─────────────────────────────────────────────────────────────
+
+function RewardsTab() {
+  const userId = useAppStore(s => s.userId) || 'default';
+  const prefs = useLiveQuery(() => db.user_preferences.get(userId), [userId]);
+
+  const rewardXp   = prefs?.reward_xp    ?? 0;
+  const rewards    = prefs?.custom_rewards ?? [];
+  const rewardLogs = prefs?.reward_logs   ?? [];
+
+  const [showManage, setShowManage] = useState(false);
+  const [rewardToDelete, setRewardToDelete] = useState<string | null>(null);
+  const [redeemError, setRedeemError] = useState<string | null>(null);
+
+  // ── Redeem ────────────────────────────────────────────────────────────────
+  const handleRedeem = async (reward: CustomReward) => {
+    if (!prefs) return;
+    if (rewardXp < reward.cost) {
+      setRedeemError(`Not enough Reward XP! You need ${reward.cost - rewardXp} more.`);
+      setTimeout(() => setRedeemError(null), 3000);
+      return;
+    }
+    const newLog: RewardLog = {
+      id: generateId(),
+      reward_id: reward.id,
+      reward_name: reward.name,
+      reward_cost: reward.cost,
+      redeemed_at: new Date().toISOString(),
+    };
+    await db.user_preferences.update(userId, {
+      reward_xp: rewardXp - reward.cost,
+      reward_logs: [newLog, ...rewardLogs],
+      sync_status: 'pending',
+      updated_at: new Date().toISOString(),
+    });
+    syncManager.queueSync('dashboard');
+    confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+      {/* Balance Banner */}
+      <div style={{
+        background: 'linear-gradient(135deg, var(--mod-goals-primary), var(--mod-goals-dark))',
+        borderRadius: '16px',
+        padding: '28px 32px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+      }}>
+        <div>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
+            Reward XP Balance
+          </div>
+          <div style={{ fontSize: '48px', fontWeight: 900, color: '#fff', lineHeight: 1 }}>
+            {rewardXp.toLocaleString()} <span style={{ fontSize: '20px', fontWeight: 600, opacity: 0.8 }}>RXP</span>
+          </div>
+          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.65)', marginTop: '8px' }}>
+            Earned from completing skill tasks. Spend on rewards — never affects Skill XP.
+          </div>
+        </div>
+        <div style={{ fontSize: '64px', opacity: 0.3 }}>✨</div>
       </div>
 
-      {showModal && (
-        <GoalModal 
-          goal={editingGoal} 
-          onClose={() => setShowModal(false)} 
-        />
+      {redeemError && (
+        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '10px', color: '#ef4444', fontSize: '14px', fontWeight: 600 }}>
+          {redeemError}
+        </div>
       )}
 
-      {goalToDelete && (
-        <DeleteConfirmationModal
-          isOpen={!!goalToDelete}
-          title="Delete Goal"
-          message={`Are you sure you want to delete "${goalToDelete.title}"? All milestones and progress will be lost.`}
-          onConfirm={confirmDelete}
-          onCancel={() => setGoalToDelete(null)}
+      {/* Rewards Grid */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ShoppingBag size={18} /> Custom Rewards
+        </div>
+        <button
+          className={styles.primaryButton}
+          onClick={() => setShowManage(true)}
+        >
+          <Plus size={16} /> Manage Rewards
+        </button>
+      </div>
+
+      {rewards.length === 0 ? (
+        <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-tertiary)', background: 'var(--card-bg)', borderRadius: '16px', border: '2px dashed var(--card-border)' }}>
+          <div style={{ fontSize: '40px', marginBottom: '12px' }}>🎁</div>
+          <div style={{ fontWeight: 700, marginBottom: '6px' }}>No rewards yet</div>
+          <div style={{ fontSize: '14px' }}>Click "Manage Rewards" to create custom rewards you can spend your Reward XP on.</div>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+          {rewards.map(reward => {
+            const canAfford = rewardXp >= reward.cost;
+            return (
+              <div key={reward.id} style={{
+                background: 'var(--card-bg)',
+                border: `1px solid ${canAfford ? 'var(--mod-goals-primary)' : 'var(--card-border)'}`,
+                borderRadius: '14px',
+                padding: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                transition: 'border-color 0.2s, box-shadow 0.2s',
+                boxShadow: canAfford ? '0 0 0 1px var(--mod-goals-primary)22' : 'none',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                  <div style={{ fontSize: '32px' }}>{reward.icon || '🎁'}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: '16px', color: 'var(--text-primary)' }}>{reward.name}</div>
+                    {reward.description && (
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>{reward.description}</div>
+                    )}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+                  <div style={{
+                    background: canAfford ? 'rgba(var(--mod-goals-primary-rgb, 139,92,246), 0.12)' : 'var(--bg-secondary)',
+                    color: canAfford ? 'var(--mod-goals-primary)' : 'var(--text-tertiary)',
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontWeight: 800,
+                    fontSize: '15px',
+                  }}>
+                    {reward.cost.toLocaleString()} RXP
+                  </div>
+                  <button
+                    className={styles.primaryButton}
+                    disabled={!canAfford}
+                    onClick={() => handleRedeem(reward)}
+                    style={{
+                      opacity: canAfford ? 1 : 0.4,
+                      cursor: canAfford ? 'pointer' : 'not-allowed',
+                      padding: '8px 16px',
+                    }}
+                  >
+                    <Gift size={14} /> Redeem
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Redemption Log */}
+      {rewardLogs.length > 0 && (
+        <div>
+          <div style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+            <History size={18} /> Redemption Log
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {rewardLogs.slice(0, 30).map(log => (
+              <div key={log.id} style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: 'var(--card-bg)',
+                border: '1px solid var(--card-border)',
+                borderRadius: '10px',
+                padding: '12px 16px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ fontSize: '20px' }}>🎁</div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-primary)' }}>{log.reward_name}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+                      {new Date(log.redeemed_at).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ fontWeight: 800, color: '#ef4444', fontSize: '14px' }}>
+                  -{log.reward_cost.toLocaleString()} RXP
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Manage Rewards Modal */}
+      {showManage && (
+        <ManageRewardsModal
+          rewards={rewards}
+          onClose={() => setShowManage(false)}
+          onSave={async (updated) => {
+            if (!prefs) return;
+            await db.user_preferences.update(userId, {
+              custom_rewards: updated,
+              sync_status: 'pending',
+              updated_at: new Date().toISOString(),
+            });
+            syncManager.queueSync('dashboard');
+          }}
         />
       )}
     </div>
   );
 }
+
+// ── Manage Rewards Modal ────────────────────────────────────────────────────
+
+const REWARD_EMOJIS = ['🎁','🎮','🎬','🍔','🍕','🧁','🎉','🏖️','💤','📺','🎵','🛒','☕','🧘','🍷','✈️','💆','🎯','🎲','📚'];
+
+function ManageRewardsModal({ rewards, onClose, onSave }: {
+  rewards: CustomReward[];
+  onClose: () => void;
+  onSave: (updated: CustomReward[]) => Promise<void>;
+}) {
+  const [list, setList] = useState<CustomReward[]>(rewards);
+  const [name, setName] = useState('');
+  const [desc, setDesc] = useState('');
+  const [cost, setCost] = useState<number | ''>('');
+  const [icon, setIcon] = useState('🎁');
+  const [showPicker, setShowPicker] = useState(false);
+  const [toDelete, setToDelete] = useState<string | null>(null);
+
+  const handleAdd = () => {
+    if (!name.trim() || !cost) return;
+    const newReward: CustomReward = {
+      id: generateId(),
+      name: name.trim(),
+      description: desc.trim() || undefined,
+      cost: Number(cost),
+      icon,
+    };
+    setList(prev => [...prev, newReward]);
+    setName(''); setDesc(''); setCost(''); setIcon('🎁');
+  };
+
+  const handleDeleteConfirm = () => {
+    if (toDelete) setList(prev => prev.filter(r => r.id !== toDelete));
+    setToDelete(null);
+  };
+
+  const handleSave = async () => {
+    await onSave(list);
+    onClose();
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: 10000, padding: '20px',
+    }}>
+      <div style={{
+        background: 'var(--card-bg)', border: '1px solid var(--card-border)',
+        borderRadius: '20px', width: '100%', maxWidth: '520px',
+        maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.3)',
+      }}>
+        {/* Header */}
+        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--card-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontWeight: 800, fontSize: '18px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ShoppingBag size={18} /> Manage Rewards
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: '4px' }}><X size={20} /></button>
+        </div>
+
+        {/* Body */}
+        <div style={{ overflowY: 'auto', padding: '20px 24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+          {/* Add Form */}
+          <div style={{ background: 'var(--bg-secondary)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>New Reward</div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {/* Icon Picker */}
+              <div style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowPicker(p => !p)}
+                  style={{ fontSize: '24px', background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer' }}
+                >
+                  {icon}
+                </button>
+                {showPicker && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, zIndex: 100,
+                    background: 'var(--card-bg)', border: '1px solid var(--card-border)',
+                    borderRadius: '10px', padding: '8px', display: 'grid',
+                    gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', marginTop: '4px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                  }}>
+                    {REWARD_EMOJIS.map(e => (
+                      <button key={e} type="button" onClick={() => { setIcon(e); setShowPicker(false); }}
+                        style={{ fontSize: '20px', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', borderRadius: '6px' }}>
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="Reward name *"
+                className={styles.inputField}
+                style={{ flex: 1, padding: '10px 14px', background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px' }}
+              />
+              <input
+                type="number"
+                min="1"
+                value={cost}
+                onChange={e => setCost(Number(e.target.value) || '')}
+                placeholder="Cost (RXP) *"
+                className={styles.inputField}
+                style={{ width: '110px', padding: '10px 14px', background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                value={desc}
+                onChange={e => setDesc(e.target.value)}
+                placeholder="Description (optional)"
+                className={styles.inputField}
+                style={{ flex: 1, padding: '10px 14px', background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px' }}
+              />
+              <button
+                type="button"
+                onClick={handleAdd}
+                disabled={!name.trim() || !cost}
+                className={styles.primaryButton}
+                style={{ opacity: (!name.trim() || !cost) ? 0.5 : 1 }}
+              >
+                <Plus size={16} /> Add
+              </button>
+            </div>
+          </div>
+
+          {/* Rewards List */}
+          {list.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Your Rewards ({list.length})</div>
+              {list.map(r => (
+                <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-secondary)', borderRadius: '10px', padding: '12px 14px' }}>
+                  <span style={{ fontSize: '22px' }}>{r.icon || '🎁'}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-primary)' }}>{r.name}</div>
+                    {r.description && <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{r.description}</div>}
+                  </div>
+                  <div style={{ fontWeight: 800, fontSize: '14px', color: 'var(--mod-goals-primary)', minWidth: '70px', textAlign: 'right' }}>
+                    {r.cost.toLocaleString()} RXP
+                  </div>
+                  <button
+                    onClick={() => setToDelete(r.id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '4px' }}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--card-border)', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+          <button onClick={onClose} style={{ padding: '10px 20px', background: 'var(--bg-secondary)', border: '1px solid var(--card-border)', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px' }}>
+            Cancel
+          </button>
+          <button onClick={handleSave} className={styles.primaryButton} style={{ padding: '10px 24px', fontSize: '15px', fontWeight: 700 }}>
+            Save Changes
+          </button>
+        </div>
+      </div>
+
+      {toDelete && (
+        <DeleteConfirmationModal
+          isOpen={!!toDelete}
+          title="Delete Reward"
+          message="Are you sure you want to delete this reward? This cannot be undone."
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setToDelete(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+
 
 function SortableGoalCard(props: { goal: Goal, skills: any[], onEdit: () => void, onDelete: () => void }) {
   const {
@@ -290,11 +687,11 @@ function GoalCard({ goal, skills, onEdit, onDelete, dragHandleProps }: { goal: G
 
       if (skillUpdated) {
         let newXp = Math.max(0, skill.xp + xpDelta);
-        // Calculate bracket simple formula used in skills (assumes 1000, 5000, 20000, 50000)
+        // New XP brackets: 1000/4000/12000/30000
         let level = skill.level;
-        if (newXp >= 50000) level = 'master';
-        else if (newXp >= 20000) level = 'expert';
-        else if (newXp >= 5000) level = 'advanced';
+        if (newXp >= 30000) level = 'master';
+        else if (newXp >= 12000) level = 'expert';
+        else if (newXp >= 4000) level = 'advanced';
         else if (newXp >= 1000) level = 'intermediate';
         else level = 'beginner';
 
@@ -306,6 +703,20 @@ function GoalCard({ goal, skills, onEdit, onDelete, dragHandleProps }: { goal: G
           updated_at: new Date().toISOString()
         });
         syncManager.queueSync('habits');
+
+        // Grant Reward XP for positive gains from goal-linked task sync
+        if (xpDelta > 0) {
+          const userId = useAppStore.getState().userId || 'default';
+          const pref = await db.user_preferences.get(userId);
+          if (pref) {
+            await db.user_preferences.update(userId, {
+              reward_xp: (pref.reward_xp || 0) + xpDelta,
+              sync_status: 'pending',
+              updated_at: new Date().toISOString(),
+            });
+            syncManager.queueSync('dashboard');
+          }
+        }
       }
     }
   };
@@ -363,10 +774,11 @@ function GoalCard({ goal, skills, onEdit, onDelete, dragHandleProps }: { goal: G
 
       if (skillUpdated) {
         let newXp = Math.max(0, skill.xp + xpDelta);
+        // New XP brackets: 1000/4000/12000/30000
         let level = skill.level;
-        if (newXp >= 50000) level = 'master';
-        else if (newXp >= 20000) level = 'expert';
-        else if (newXp >= 5000) level = 'advanced';
+        if (newXp >= 30000) level = 'master';
+        else if (newXp >= 12000) level = 'expert';
+        else if (newXp >= 4000) level = 'advanced';
         else if (newXp >= 1000) level = 'intermediate';
         else level = 'beginner';
 
@@ -378,6 +790,20 @@ function GoalCard({ goal, skills, onEdit, onDelete, dragHandleProps }: { goal: G
           updated_at: new Date().toISOString()
         });
         syncManager.queueSync('habits');
+
+        // Grant Reward XP for positive gains from goal-linked milestone sync
+        if (xpDelta > 0) {
+          const userId = useAppStore.getState().userId || 'default';
+          const pref = await db.user_preferences.get(userId);
+          if (pref) {
+            await db.user_preferences.update(userId, {
+              reward_xp: (pref.reward_xp || 0) + xpDelta,
+              sync_status: 'pending',
+              updated_at: new Date().toISOString(),
+            });
+            syncManager.queueSync('dashboard');
+          }
+        }
       }
     }
   };
