@@ -313,12 +313,17 @@ export function HabitsTab() {
   const confirmDeleteHabit = async () => {
     if (habitToDelete) {
       await db.transaction('rw', db.habits, db.habit_completions, db.sync_deletions, async () => {
+        // Track the deletion of all child completions to prevent Supabase FK errors
+        const completions = await db.habit_completions.where('habit_id').equals(habitToDelete).toArray();
+        for (const completion of completions) {
+          await deleteAndTrack('habit_completions', completion.id);
+        }
+        
+        // Track the deletion of the parent habit
         await deleteAndTrack('habits', habitToDelete);
-        await db.habit_completions.where('habit_id').equals(habitToDelete).delete();
       });
       syncManager.queueSync('habits');
       setHabitToDelete(null);
-      syncManager.queueSync('habits');
     }
   };
 

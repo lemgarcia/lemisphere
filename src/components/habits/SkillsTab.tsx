@@ -492,12 +492,17 @@ export function SkillsTab() {
   const confirmDeleteSkill = async () => {
     if (skillToDelete) {
       await db.transaction('rw', db.skills, db.skill_entries, db.sync_deletions, async () => {
+        // Track the deletion of all child entries to prevent Supabase FK errors
+        const entries = await db.skill_entries.where('skill_id').equals(skillToDelete).toArray();
+        for (const entry of entries) {
+          await deleteAndTrack('skill_entries', entry.id);
+        }
+        
+        // Track the deletion of the parent skill
         await deleteAndTrack('skills', skillToDelete);
-        await db.skill_entries.where('skill_id').equals(skillToDelete).delete();
       });
       syncManager.queueSync('habits');
       setSkillToDelete(null);
-      syncManager.queueSync('habits');
     }
   };
 
