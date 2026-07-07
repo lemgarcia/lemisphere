@@ -151,9 +151,21 @@ export class SyncManager {
 
       // SAFETY: If local table is empty, ONLY pull from cloud.
       // Never push 0 records — that means the local DB was wiped, not that the user deleted everything.
+      // EXCEPTION: If there are pending deletions for this table, the user intentionally deleted everything.
+      //            In that case, we must NOT pull-only — we must let processDeletions handle cloud cleanup.
       if (userRecords.length === 0) {
-        console.log(`[SyncManager] ${supabaseTableName}: Local empty — pull-only mode (data loss prevention).`);
-        return await this.pullOnly(dexieTable, supabaseTableName, userId);
+        const pendingDeletionsForTable = await db.sync_deletions
+          .where('table_name').equals(supabaseTableName)
+          .count();
+        
+        if (pendingDeletionsForTable === 0) {
+          console.log(`[SyncManager] ${supabaseTableName}: Local empty — pull-only mode (data loss prevention).`);
+          return await this.pullOnly(dexieTable, supabaseTableName, userId);
+        } else {
+          // User intentionally deleted all records — skip push/pull and let processDeletions handle cloud deletion.
+          console.log(`[SyncManager] ${supabaseTableName}: Local empty with ${pendingDeletionsForTable} pending deletions — skipping pull-only to allow deletions to propagate to cloud.`);
+          return true;
+        }
       }
 
       // PUSH: Only push pending or local records
