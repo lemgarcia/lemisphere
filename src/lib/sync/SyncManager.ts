@@ -212,7 +212,12 @@ export class SyncManager {
         const localRecords = await dexieTable.filter(r => (!r.user_id || r.user_id === userId)).toArray();
         const localRecordMap = new Map(localRecords.map(r => [r.id, r]));
 
+        // Fetch pending deletions for this table so we don't accidentally resurrect them
+        const pendingDeletions = await db.sync_deletions.where('table_name').equals(supabaseTableName).toArray();
+        const deletedIds = new Set(pendingDeletions.map(d => d.record_id));
+
         const recordsToPut = remoteRecords.map(r => ({ ...r, sync_status: 'synced' })).filter(r => {
+          if (deletedIds.has(r.id)) return false; // Do not resurrect locally deleted records
           const local = localRecordMap.get(r.id);
           return !local || (local.sync_status !== 'pending' && local.sync_status !== 'local');
         });
@@ -463,12 +468,12 @@ export class SyncManager {
             const { error: singleError } = await supabase.from(tableName).delete().eq('id', recordId);
             if (singleError) {
               console.error(`[SyncManager] Failed to delete ${recordId} from ${tableName}:`, singleError.message);
-              // If it's a constraint error, it's permanently blocked by Supabase.
-              // We remove it from the local deletion queue to prevent infinite failing loops.
-              // It will resurrect on the next pull, which accurately reflects the server state.
               if (singleError.code === '23503' || singleError.message.includes('Foreign key') || singleError.message.includes('violates foreign key constraint')) {
-                const blockedDeletions = deletions.filter(d => d.table_name === tableName && d.record_id === recordId);
-                processedIds.push(...blockedDeletions.map(d => d.id));
+                // We PREVIOUSLY removed it from the local deletion queue here.
+                // However, due to async local store updates (e.g. unlinking a habit in user_preferences),
+                // the FK constraint might be resolved just milliseconds later in the next sync batch.
+                // By keeping it in the queue, we allow it to retry and succeed.
+                console.warn(`[SyncManager] Retaining deletion in queue to retry: ${recordId}`);
               }
             } else {
               const processed = deletions.filter(d => d.table_name === tableName && d.record_id === recordId);
