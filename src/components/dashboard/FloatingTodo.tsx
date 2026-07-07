@@ -173,7 +173,7 @@ export function FloatingTodo() {
   };
 
   return (
-    <div style={{ position: 'fixed', bottom: '32px', right: '32px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '16px' }}>
+    <div style={{ position: 'fixed', bottom: 'max(32px, calc(var(--bottom-nav-height, 0px) + 16px))', right: '32px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '16px' }}>
       <AnimatePresence>
         {isOpen && (
           <motion.div

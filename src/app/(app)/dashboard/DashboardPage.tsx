@@ -261,7 +261,7 @@ export function DashboardPage() {
             </div>
           </div>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '64px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} className={styles.headerActions}>
             <button
               onClick={() => setIsLayoutEditing(!isLayoutEditing)}
               style={{
@@ -418,7 +418,7 @@ export function DashboardPage() {
         </motion.div>
 
         {/* Native Stat Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', width: '100%', marginBottom: '24px' }}>
+        <div className={styles.statCardsGrid}>
           <StatStreakWidget />
           <StatExpWidget />
           <StatActiveGoalsWidget />
@@ -426,15 +426,7 @@ export function DashboardPage() {
         </div>
 
         {/* Bento Grid */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(12, 1fr)', 
-          gridAutoFlow: 'row dense',
-          gridAutoRows: '110px',
-          gap: '24px', 
-          width: '100%', 
-          marginBottom: '40px' 
-        }}>
+        <div className={styles.bentoGrid}>
           <SortableContext items={dashboardLayout.map(w => w.id)} strategy={rectSwappingStrategy}>
             {dashboardLayout.map((widget) => {
               if (!widget.visible) return null;

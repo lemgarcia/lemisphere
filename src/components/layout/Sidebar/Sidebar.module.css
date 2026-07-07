@@ -15,8 +15,14 @@
   z-index: var(--z-sticky);
   transition: width var(--transition-snappy);
   overflow: hidden;
-  /* Subtle top glow */
 }
+
+@media (max-width: 767px) {
+  .sidebar {
+    display: none;
+  }
+}
+
 
 .sidebar::before {
   content: '';

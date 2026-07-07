@@ -262,3 +262,41 @@
 .userDropdownItem:hover { background: rgba(0, 0, 0, 0.04); }
 .userDropdownItem.danger { color: var(--status-error); }
 .userDropdownItem.danger:hover { background: var(--status-error-bg); }
+
+/* ── Mobile TopBar ───────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .topbar {
+    padding: 0 16px;
+    gap: 10px;
+    height: 52px;
+  }
+
+  .pageTitle {
+    font-size: 18px;
+  }
+
+  .pageSubtitle {
+    display: none;
+  }
+
+  /* Hide verbose elements on mobile */
+  .dateDisplay,
+  .syncIndicator {
+    display: none;
+  }
+
+  /* Tighter icon buttons */
+  .iconBtn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+  }
+
+  /* Notification dropdown full-width-ish on mobile */
+  .notificationDropdown {
+    right: -8px;
+    width: calc(100vw - 32px);
+    max-width: 340px;
+  }
+}
+

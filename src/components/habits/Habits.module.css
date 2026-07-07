@@ -616,3 +616,34 @@
 .diffHard { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
 .diffExtreme { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
 .diffTiny { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+
+/* ----------------------------------------------------------------------------
+   MOBILE RESPONSIVE
+   ---------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  .container {
+    gap: 16px;
+  }
+
+  /* Skills grid: single column */
+  .skillGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .skillCard {
+    padding: 16px;
+  }
+
+  /* Modals: slide up from bottom on mobile */
+  .modalOverlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modalContent {
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    max-width: 100%;
+  }
+}

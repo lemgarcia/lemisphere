@@ -571,3 +571,43 @@
 
 
 
+
+/* ----------------------------------------------------------------------------
+   MOBILE RESPONSIVE
+   ---------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  .container {
+    gap: 20px;
+    padding-bottom: 24px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  /* Program/blueprint cards: single column */
+  .blueprintGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .sectionTitle {
+    font-size: 16px;
+  }
+
+  /* Exercise rows: stack label/weight side by side but reduce padding */
+  .exRow {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .exInlineInput {
+    font-size: 14px;
+  }
+
+  /* Workout day list: full width */
+  .progressCard {
+    padding: 14px;
+  }
+}

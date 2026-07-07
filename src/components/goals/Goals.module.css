@@ -288,3 +288,64 @@
   z-index: 10;
   margin-top: 8px;
 }
+
+/* ----------------------------------------------------------------------------
+   MOBILE RESPONSIVE
+   ---------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  .container {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  /* Tabs: horizontally scrollable */
+  .tabsRow {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    gap: 6px;
+    padding-bottom: 12px;
+    margin-top: 8px;
+    /* Hide scrollbar visually */
+    scrollbar-width: none;
+  }
+  .tabsRow::-webkit-scrollbar { display: none; }
+
+  .tabBtn {
+    padding: 7px 12px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  /* Goals grid: single column */
+  .goalsGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Metrics grid: 2 col */
+  .metricsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .metricValue {
+    font-size: 24px;
+  }
+
+  /* Modals: full-screen on mobile */
+  .modalOverlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modalContent {
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    max-width: 100%;
+  }
+
+  .modalBody {
+    padding: 16px;
+  }
+}

@@ -48,3 +48,26 @@
   position: relative;
   z-index: 1;
 }
+
+/* ── Mobile overrides ────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .mainContent {
+    margin-left: 0 !important;
+  }
+
+  .pageContent {
+    padding: 16px 16px;
+    /* Extra bottom padding so content isn't hidden behind bottom nav */
+    padding-bottom: calc(var(--bottom-nav-height, 64px) + env(safe-area-inset-bottom, 0px) + 16px);
+    min-height: calc(100vh - var(--topbar-height));
+  }
+
+  /* Push notifications above the bottom nav bar */
+  .notificationsContainer {
+    bottom: calc(var(--bottom-nav-height, 64px) + env(safe-area-inset-bottom, 0px) + 12px) !important;
+    right: 12px !important;
+    left: 12px !important;
+    width: auto !important;
+  }
+}
+

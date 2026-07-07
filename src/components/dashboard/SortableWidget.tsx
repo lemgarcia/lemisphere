@@ -23,6 +23,9 @@ export function SortableWidget({ id, isEditing, width, height = 'standard', chil
     isDragging,
   } = useSortable({ id, data: { type: 'widget' } });
 
+  const colSpan = width === 'full' ? 12 : width === 'two-thirds' ? 8 : width === 'half' ? 6 : width === 'third' ? 4 : 3;
+  const rowSpan = height === 'tall' ? 3 : height === 'standard' ? 2 : 1;
+
   const style = {
     transform: CSS.Translate.toString(transform),
     transition,
@@ -30,8 +33,9 @@ export function SortableWidget({ id, isEditing, width, height = 'standard', chil
     position: 'relative' as const,
     zIndex: isDragging ? 100 : 1,
     height: '100%',
-    gridColumn: width === 'full' ? 'span 12' : width === 'two-thirds' ? 'span 8' : width === 'half' ? 'span 6' : width === 'third' ? 'span 4' : 'span 3',
-    gridRow: height === 'tall' ? 'span 3' : height === 'standard' ? 'span 2' : 'span 1',
+    // CSS custom property approach: overridden to 1 on mobile via CSS
+    gridColumn: `span ${colSpan}`,
+    gridRow: `span ${rowSpan}`,
   };
 
   return (

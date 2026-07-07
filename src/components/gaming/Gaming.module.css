@@ -299,3 +299,51 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ----------------------------------------------------------------------------
+   MOBILE RESPONSIVE
+   ---------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  .container {
+    padding: 0;
+  }
+
+  .header {
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* Tabs: horizontally scrollable */
+  .pageTabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 16px;
+    margin-bottom: 16px;
+    scrollbar-width: none;
+  }
+  .pageTabs::-webkit-scrollbar { display: none; }
+
+  .tabButton {
+    flex-shrink: 0;
+    font-size: 13px;
+    padding: 10px 2px;
+  }
+
+  /* Game series cards: 2-column on mobile (portrait art cards look great 2-up) */
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .card {
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 430px) {
+  /* Very small phones: still 2-col but tighter */
+  .grid {
+    gap: 8px;
+  }
+}

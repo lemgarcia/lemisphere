@@ -176,7 +176,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
         gap: '12px',
         zIndex: 9999,
         pointerEvents: 'none'
-      }}>
+      }} className={styles.notificationsContainer}>
         <AnimatePresence>
           {activeNotifications.map(notification => (
             <motion.div

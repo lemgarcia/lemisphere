@@ -1,0 +1,85 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   BOTTOM NAV — Mobile-only tab bar (hidden on desktop)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.bottomNav {
+  display: none; /* Hidden on desktop */
+}
+
+@media (max-width: 767px) {
+  .bottomNav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--bottom-nav-height, 64px);
+    background: var(--bottom-nav-bg, rgba(240, 235, 227, 0.97));
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border-top: 1px solid rgba(0, 0, 0, 0.07);
+    z-index: 200;
+    align-items: stretch;
+    /* Safe area for iOS home indicator */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .navItem {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-decoration: none;
+    color: var(--text-muted);
+    transition: color var(--transition-fast);
+    padding: 8px 4px 6px;
+    position: relative;
+  }
+
+  .navItem:hover {
+    text-decoration: none;
+    color: var(--text-secondary);
+  }
+
+  .navItem.active {
+    color: var(--text-primary);
+  }
+
+  /* Pill indicator on active item */
+  .navItem.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 3px;
+    border-radius: 0 0 4px 4px;
+    background: var(--accent-violet);
+  }
+
+  .iconWrap {
+    width: 44px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    transition: background var(--transition-fast), transform var(--transition-fast);
+  }
+
+  .navItem.active .iconWrap {
+    transform: translateY(-1px);
+  }
+
+  .label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+}
