@@ -28,7 +28,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useAppStore } from '@/stores/appStore';
+
 import { GoalLinkSelector } from './GoalLinkSelector';
 
 const ALL_EMOJIS = [

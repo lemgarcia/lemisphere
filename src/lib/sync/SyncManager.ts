@@ -246,14 +246,7 @@ export class SyncManager {
                 hiddenQuickNav: latest.hidden_quick_nav || [],
                 monitoredHabitId: latest.monitored_habit_id || null
               });
-              // Update budgie store if there's budgie data
-              if (latest.budgie_food_rotation || latest.budgie_daily_routine) {
-                const { useBudgieStore } = require('@/stores/budgieStore');
-                useBudgieStore.setState({
-                  foodRotation: latest.budgie_food_rotation || [],
-                  dailyRoutine: latest.budgie_daily_routine || []
-                });
-              }
+
             }
           }
         }
@@ -313,13 +306,7 @@ export class SyncManager {
               hiddenQuickNav: latest.hidden_quick_nav || [],
               monitoredHabitId: latest.monitored_habit_id || null
             });
-            if (latest.budgie_food_rotation || latest.budgie_daily_routine) {
-              const { useBudgieStore } = require('@/stores/budgieStore');
-              useBudgieStore.setState({
-                foodRotation: latest.budgie_food_rotation || [],
-                dailyRoutine: latest.budgie_daily_routine || []
-              });
-            }
+
           }
         }
       }
