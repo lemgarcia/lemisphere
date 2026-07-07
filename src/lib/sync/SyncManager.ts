@@ -383,8 +383,8 @@ export class SyncManager {
 
     const tables = this.getModuleTables(module);
 
-    await this.processDeletions();
     await this.syncTables(tables, userId);
+    await this.processDeletions();
 
     appStore.setSyncState({
       isSyncing: false,
@@ -505,12 +505,12 @@ export class SyncManager {
 
     appStore.setSyncState({ isSyncing: true });
 
-    await this.processDeletions();
-
     for (const module of modules) {
       const tables = this.getModuleTables(module);
       await this.syncTables(tables, userId);
     }
+
+    await this.processDeletions();
 
     appStore.setSyncState({
       isSyncing: false,

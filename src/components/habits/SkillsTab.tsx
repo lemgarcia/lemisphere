@@ -501,7 +501,7 @@ export function SkillsTab() {
         // Track the deletion of the parent skill
         await deleteAndTrack('skills', skillToDelete);
       });
-      syncManager.queueSync('habits');
+      syncManager.syncAll();
       setSkillToDelete(null);
     }
   };

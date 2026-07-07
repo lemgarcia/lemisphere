@@ -312,6 +312,11 @@ export function HabitsTab() {
 
   const confirmDeleteHabit = async () => {
     if (habitToDelete) {
+      // Clear monitoredHabitId if it's the one being deleted, to prevent FK constraint blocks
+      if (useAppStore.getState().monitoredHabitId === habitToDelete) {
+        useAppStore.getState().setMonitoredHabitId(null);
+      }
+
       await db.transaction('rw', db.habits, db.habit_completions, db.sync_deletions, async () => {
         // Track the deletion of all child completions to prevent Supabase FK errors
         const completions = await db.habit_completions.where('habit_id').equals(habitToDelete).toArray();
@@ -322,7 +327,7 @@ export function HabitsTab() {
         // Track the deletion of the parent habit
         await deleteAndTrack('habits', habitToDelete);
       });
-      syncManager.queueSync('habits');
+      syncManager.syncAll();
       setHabitToDelete(null);
     }
   };
