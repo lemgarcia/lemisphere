@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { deleteAndTrack } from '@/lib/db/deleteAndTrack';
 import { syncManager } from '@/lib/sync/SyncManager';
+import { supabase } from '@/lib/supabase/client';
 import { generateId } from '@/utils';
 import { useHabitsStore } from '@/stores/habitsStore';
 import { Plus, X, Pencil, Trash2, Check, Flame, GripVertical, Trophy } from 'lucide-react';
@@ -312,22 +313,49 @@ export function HabitsTab() {
 
   const confirmDeleteHabit = async () => {
     if (habitToDelete) {
-      // Clear monitoredHabitId if it's the one being deleted, to prevent FK constraint blocks
-      if (useAppStore.getState().monitoredHabitId === habitToDelete) {
+      const idToDelete = habitToDelete;
+
+      // Clear monitoredHabitId if it's the one being deleted
+      if (useAppStore.getState().monitoredHabitId === idToDelete) {
         useAppStore.getState().setMonitoredHabitId(null);
       }
 
+      // 1. Delete from local IndexedDB immediately
       await db.transaction('rw', db.habits, db.habit_completions, db.sync_deletions, async () => {
-        // Track the deletion of all child completions to prevent Supabase FK errors
-        const completions = await db.habit_completions.where('habit_id').equals(habitToDelete).toArray();
+        const completions = await db.habit_completions.where('habit_id').equals(idToDelete).toArray();
         for (const completion of completions) {
           await deleteAndTrack('habit_completions', completion.id);
         }
-        
-        // Track the deletion of the parent habit
-        await deleteAndTrack('habits', habitToDelete);
+        await deleteAndTrack('habits', idToDelete);
       });
-      syncManager.syncAll();
+
+      // 2. Delete DIRECTLY from Supabase right now — do NOT wait for the sync queue.
+      //    The sync queue is device-local, so other devices would never see the deletion otherwise.
+      const userId = useAppStore.getState().userId;
+      if (userId) {
+        // Delete child completions first to avoid FK constraint violations
+        await supabase
+          .from('habit_completions')
+          .delete()
+          .eq('habit_id', idToDelete)
+          .eq('user_id', userId);
+
+        // Then delete the habit itself
+        const { error } = await supabase
+          .from('habits')
+          .delete()
+          .eq('id', idToDelete)
+          .eq('user_id', userId);
+
+        if (error) {
+          console.error('[HabitsTab] Failed to delete habit from Supabase:', error.message);
+        } else {
+          console.log('[HabitsTab] Habit deleted from Supabase successfully:', idToDelete);
+          // Clear from sync_deletions since we already handled it directly
+          await db.sync_deletions.where('record_id').equals(idToDelete).delete();
+        }
+      }
+
       setHabitToDelete(null);
     }
   };

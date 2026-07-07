@@ -3,6 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { deleteAndTrack } from '@/lib/db/deleteAndTrack';
 import { syncManager } from '@/lib/sync/SyncManager';
+import { supabase } from '@/lib/supabase/client';
+import { useAppStore } from '@/stores/appStore';
 import { generateId } from '@/utils';
 import { Plus, X, Pencil, Trash2, Award, GripVertical, Check, ExternalLink } from 'lucide-react';
 import type { Skill, SkillEntry, SkillLevel, ChecklistItem, SkillStatus, SkillCategory, TaskDifficulty } from '@/types/modules';
@@ -491,17 +493,42 @@ export function SkillsTab() {
 
   const confirmDeleteSkill = async () => {
     if (skillToDelete) {
+      const idToDelete = skillToDelete;
+
+      // 1. Delete from local IndexedDB immediately
       await db.transaction('rw', db.skills, db.skill_entries, db.sync_deletions, async () => {
-        // Track the deletion of all child entries to prevent Supabase FK errors
-        const entries = await db.skill_entries.where('skill_id').equals(skillToDelete).toArray();
+        const entries = await db.skill_entries.where('skill_id').equals(idToDelete).toArray();
         for (const entry of entries) {
           await deleteAndTrack('skill_entries', entry.id);
         }
-        
-        // Track the deletion of the parent skill
-        await deleteAndTrack('skills', skillToDelete);
+        await deleteAndTrack('skills', idToDelete);
       });
-      syncManager.syncAll();
+
+      // 2. Delete DIRECTLY from Supabase right now — not via sync queue (which is device-local)
+      const userId = useAppStore.getState().userId;
+      if (userId) {
+        // Delete child entries first
+        await supabase
+          .from('skill_entries')
+          .delete()
+          .eq('skill_id', idToDelete)
+          .eq('user_id', userId);
+
+        // Then delete the skill itself
+        const { error } = await supabase
+          .from('skills')
+          .delete()
+          .eq('id', idToDelete)
+          .eq('user_id', userId);
+
+        if (error) {
+          console.error('[SkillsTab] Failed to delete skill from Supabase:', error.message);
+        } else {
+          console.log('[SkillsTab] Skill deleted from Supabase successfully:', idToDelete);
+          await db.sync_deletions.where('record_id').equals(idToDelete).delete();
+        }
+      }
+
       setSkillToDelete(null);
     }
   };
