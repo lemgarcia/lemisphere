@@ -123,27 +123,22 @@ export function WorkoutsTab() {
     if (!exercises || !activeProgram || !selectedSet) return {};
     const map: Record<string, string> = {};
 
-    // Get all workout_logs for this program that belong to a PREVIOUS set
+    // Get the workout_log for this program from the EXACT PREVIOUS set (week)
     const previousLogs = await db.workout_logs
-      .filter(l => l.program_id === activeProgram.id && l.set_number < selectedSet)
+      .filter(l => l.program_id === activeProgram.id && l.set_number === selectedSet - 1)
       .toArray();
     const previousLogIds = new Set(previousLogs.map(l => l.id));
 
     for (const ex of exercises) {
-      // Get all exercise logs for this exercise from previous sets
+      // Get the exercise log for this exercise from the exact previous set, BUT ONLY IF it was actually completed!
       const previousExLogs = await db.workout_exercise_logs
         .where('exercise_id').equals(ex.id)
-        .filter(l => previousLogIds.has(l.workout_log_id) && l.weight !== undefined && l.weight !== null && l.weight !== '')
+        .filter(l => previousLogIds.has(l.workout_log_id) && l.weight !== undefined && l.weight !== null && l.weight !== '' && l.completed === true)
         .toArray();
 
       if (previousExLogs.length > 0) {
-        // Pick the most recent one by looking at the workout_log's set_number
-        const logsWithSet = previousExLogs.map(el => {
-          const parentLog = previousLogs.find(pl => pl.id === el.workout_log_id);
-          return { ...el, set_number: parentLog?.set_number ?? 0 };
-        });
-        logsWithSet.sort((a, b) => b.set_number - a.set_number);
-        map[ex.id] = String(logsWithSet[0].weight);
+        // We only have logs from the exact previous set, so we can just grab the first one
+        map[ex.id] = String(previousExLogs[0].weight);
       }
     }
     return map;
