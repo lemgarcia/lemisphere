@@ -21,16 +21,22 @@ export function FitnessTodayWidget() {
 
     if (!activeProgram) return null;
 
-    // Check if there is a workout logged today
-    const todaysLog = await db.workout_logs
+    // Check if there is a workout logged today that is FULLY completed
+    const todaysCompletedLog = await db.workout_logs
       .where('date').equals(todayStr)
-      .filter(l => l.user_id === userId && l.program_id === activeProgram.id)
+      .filter(l => l.user_id === userId && l.program_id === activeProgram.id && l.completed === true)
       .first();
 
-    // If there is a log, it's done for today!
-    if (todaysLog) {
+    // If there is a completed log, it's done for today!
+    if (todaysCompletedLog) {
       return { program: activeProgram, status: 'completed' as const, day: null };
     }
+
+    // Check if there is a workout logged today that is IN PROGRESS
+    const todaysInProgressLog = await db.workout_logs
+      .where('date').equals(todayStr)
+      .filter(l => l.user_id === userId && l.program_id === activeProgram.id && !l.completed)
+      .first();
 
     // Find the next active day. This logic could be complex depending on scheduling, but we can just say "Next Workout" or assume Day 1 if no logs
     // For simplicity, we just fetch the first incomplete day based on order, or just the program info.
@@ -48,11 +54,19 @@ export function FitnessTodayWidget() {
     
     let nextDay = days.find(d => !completedDayIds.has(d.id));
     
+    // If we have an in-progress log for today, we should probably point to that specific day!
+    if (todaysInProgressLog) {
+      const inProgressDay = days.find(d => d.id === todaysInProgressLog.program_day_id);
+      if (inProgressDay) {
+        nextDay = inProgressDay;
+      }
+    }
+    
     if (!nextDay) nextDay = days[0]; // If set is complete but not advanced yet
 
     const dayNumber = completedDayIds.size + 1;
 
-    return { program: activeProgram, status: 'pending' as const, day: nextDay, dayNumber };
+    return { program: activeProgram, status: 'pending' as const, day: nextDay, dayNumber, inProgress: !!todaysInProgressLog };
   }, [userId]);
 
   return (
@@ -89,7 +103,7 @@ export function FitnessTodayWidget() {
                 <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Day {fitnessData.dayNumber}</div>
               </div>
               <Link href="/fitness" style={{ padding: '6px 12px', background: 'var(--accent-violet)', color: '#fff', fontSize: '12px', fontWeight: 600, borderRadius: '6px', textDecoration: 'none' }}>
-                Start
+                {fitnessData.inProgress ? 'Resume' : 'Start'}
               </Link>
             </div>
           </div>

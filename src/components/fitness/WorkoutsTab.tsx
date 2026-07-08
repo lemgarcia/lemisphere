@@ -49,11 +49,25 @@ export function WorkoutsTab() {
     return await db.fitness_program_days.where('program_id').equals(activeProgram.id).filter(x => x.user_id === (useAppStore.getState().userId || 'default')).sortBy('order');
   }, [activeProgram?.id]);
 
+  // Fetch all logs for the selected Set to check Set completion and defaulting
+  const currentSetLogs = useLiveQuery(async () => {
+    if (!activeProgram || !selectedSet) return [];
+    return await db.workout_logs
+      .filter(l => l.program_id === activeProgram.id && l.set_number === selectedSet)
+      .toArray();
+  }, [activeProgram?.id, selectedSet]);
+
   useEffect(() => {
     if (days && days.length > 0 && !selectedDayId) {
-      setSelectedDayId(days[0].id);
+      if (currentSetLogs) {
+        const completedDayIds = new Set(currentSetLogs.filter(l => l.completed).map(l => l.program_day_id));
+        const firstUndone = days.find(d => !completedDayIds.has(d.id));
+        setSelectedDayId(firstUndone ? firstUndone.id : days[0].id);
+      } else {
+        setSelectedDayId(days[0].id);
+      }
     }
-  }, [days, selectedDayId]);
+  }, [days, selectedDayId, currentSetLogs]);
 
   // 3. Fetch Exercises for Selected Day
   const exercises = useLiveQuery(async () => {
@@ -73,14 +87,6 @@ export function WorkoutsTab() {
       .filter(l => l.program_id === activeProgram.id && l.program_day_id === selectedDayId && l.set_number === selectedSet)
       .first();
   }, [activeProgram?.id, selectedDayId, selectedSet]);
-
-  // Fetch all logs for the selected Set to check Set completion
-  const currentSetLogs = useLiveQuery(async () => {
-    if (!activeProgram || !selectedSet) return [];
-    return await db.workout_logs
-      .filter(l => l.program_id === activeProgram.id && l.set_number === selectedSet)
-      .toArray();
-  }, [activeProgram?.id, selectedSet]);
 
   const isSetComplete = days && days.length > 0 && currentSetLogs && 
                          new Set(currentSetLogs.filter(l => l.completed).map(l => l.program_day_id)).size === days.length;
