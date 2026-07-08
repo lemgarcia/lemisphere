@@ -244,6 +244,16 @@ export const useAppStore = create<AppState & AppActions>()(
 
           // Wipe local database to guarantee cross-account isolation
           await db.delete();
+          
+          // Clear Delta Sync timestamps so the next login performs a full pull
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('lemisphere_sync_time_')) {
+              localStorage.removeItem(key);
+              i--; // adjust index after removal
+            }
+          }
+          
           window.location.href = '/login';
         },
 
