@@ -210,9 +210,14 @@ export class SyncManager {
           console.log(`[SyncManager] Individual fallback complete for ${supabaseTableName}.`);
         }
       }
-
-      // PULL — always fetch all records (no lastSyncAt filter) to guarantee cross-device consistency
-      const query = supabase.from(supabaseTableName).select('*').eq('user_id', userId);
+      // PULL: Delta Syncing to lower egress
+      const lastSyncKey = `lemisphere_sync_time_${userId}_${supabaseTableName}`;
+      const lastSyncAt = localStorage.getItem(lastSyncKey);
+      
+      let query = supabase.from(supabaseTableName).select('*').eq('user_id', userId);
+      if (lastSyncAt) {
+        query = query.gt('updated_at', lastSyncAt);
+      }
 
       const { data: remoteRecords, error: pullError } = await query;
       if (pullError) {
@@ -250,10 +255,19 @@ export class SyncManager {
             }
           }
         }
+        
+        // Update lastSyncAt to the maximum updated_at of the pulled records
+        const maxUpdatedAt = remoteRecords.reduce((max, r) => r.updated_at > max ? r.updated_at : max, lastSyncAt || '');
+        if (maxUpdatedAt) {
+          localStorage.setItem(lastSyncKey, maxUpdatedAt);
+        }
+      } else if (!lastSyncAt) {
+        // If we've never synced and there are no records, just set it to now
+        localStorage.setItem(lastSyncKey, new Date().toISOString());
       }
 
       // DATA LOSS PREVENTION: Cross-device deletion detection
-      // Fetch all remote IDs to see if any local 'synced' records were deleted on another device.
+      // Fetch all remote IDs (very lightweight, 1000x smaller payload than full records) to see if any local 'synced' records were deleted on another device.
       // (Only check records belonging to this user)
       const { data: allRemoteIds } = await supabase.from(supabaseTableName).select('id').eq('user_id', userId);
       if (allRemoteIds) {
@@ -283,10 +297,15 @@ export class SyncManager {
     userId: string
   ): Promise<boolean> {
     try {
-      const { data, error } = await supabase
-        .from(supabaseTableName)
-        .select('*')
-        .eq('user_id', userId);
+      const lastSyncKey = `lemisphere_sync_time_${userId}_${supabaseTableName}`;
+      const lastSyncAt = localStorage.getItem(lastSyncKey);
+
+      let query = supabase.from(supabaseTableName).select('*').eq('user_id', userId);
+      if (lastSyncAt) {
+        query = query.gt('updated_at', lastSyncAt);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error(`[SyncManager] Pull-only error for ${supabaseTableName}:`, error.message);
@@ -306,8 +325,28 @@ export class SyncManager {
               hiddenQuickNav: latest.hidden_quick_nav || [],
               monitoredHabitId: latest.monitored_habit_id || null
             });
-
           }
+        }
+        
+        const maxUpdatedAt = data.reduce((max, r) => r.updated_at > max ? r.updated_at : max, lastSyncAt || '');
+        if (maxUpdatedAt) {
+          localStorage.setItem(lastSyncKey, maxUpdatedAt);
+        }
+      } else if (!lastSyncAt) {
+        localStorage.setItem(lastSyncKey, new Date().toISOString());
+      }
+
+      // Also do deletion pruning in pullOnly to be safe
+      const { data: allRemoteIds } = await supabase.from(supabaseTableName).select('id').eq('user_id', userId);
+      if (allRemoteIds) {
+        const remoteIdSet = new Set(allRemoteIds.map(r => r.id));
+        const localRecords = await dexieTable.filter(r => (!r.user_id || r.user_id === userId)).toArray();
+        const idsToDelete = localRecords
+          .filter(r => r.sync_status === 'synced' && !remoteIdSet.has(r.id))
+          .map(r => r.id);
+        
+        if (idsToDelete.length > 0) {
+          await dexieTable.bulkDelete(idsToDelete);
         }
       }
 
