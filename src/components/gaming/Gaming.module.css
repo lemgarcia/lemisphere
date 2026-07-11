@@ -274,6 +274,11 @@
   color: #2563eb;
 }
 
+.statusRequested {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
 .statusPlayed {
   background: #e0e7ff;
   color: #4f46e5;

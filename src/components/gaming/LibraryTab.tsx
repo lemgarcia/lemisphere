@@ -14,6 +14,7 @@ import styles from './Gaming.module.css';
 
 const STATUSES: { value: GameStatus; label: string }[] = [
   { value: 'playwish', label: 'PlayWish' },
+  { value: 'requested', label: 'Requested' },
   { value: 'playing', label: 'Playing' },
   { value: 'played', label: 'Played' },
   { value: 'completed', label: 'Finished' },
@@ -26,6 +27,7 @@ const PLATFORMS: GamePlatform[] = ['PC', 'PS5', 'PS4', 'Switch', 'Xbox', 'Mobile
 
 function getStatusBadgeClass(status: GameStatus) {
   if (status === 'playing') return `${styles.badge} ${styles.statusPlaying}`;
+  if (status === 'requested') return `${styles.badge} ${styles.statusRequested}`;
   if (status === 'played') return `${styles.badge} ${styles.statusPlayed}`;
   if (status === 'completed') return `${styles.badge} ${styles.statusCompleted}`;
   if (status === 'mastered') return `${styles.badge} ${styles.statusMastered}`;
@@ -71,6 +73,13 @@ export function LibraryTab() {
     const formData = new FormData(e.currentTarget);
     const status = formData.get('status') as GameStatus;
     
+    if (status === 'requested') {
+      if (totalGP < 5) {
+        setGpWarningModal({ required: 5, current: totalGP, action: 'add a requested game' });
+        return;
+      }
+    }
+
     // "add currently playing games (0 gp)" -> new games added directly to playing are free.
     const newGame: Game = {
       id: generateId(),
@@ -90,7 +99,26 @@ export function LibraryTab() {
       device_id: 'default',
     };
 
-    await db.games.add(newGame);
+    await db.transaction('rw', db.games, db.gp_transactions, async () => {
+      await db.games.add(newGame);
+      
+      if (status === 'requested') {
+        await db.gp_transactions.add({
+          id: generateId(),
+          user_id: newGame.user_id,
+          game_id: newGame.id,
+          amount: -5,
+          reason: 'Requested Game',
+          type: 'requested',
+          sync_status: 'pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          version: 1,
+          device_id: 'default',
+        });
+      }
+    });
+
     syncManager.queueSync('gaming');
     setShowAddModal(false);
     setCoverPreview(null);
@@ -112,6 +140,7 @@ export function LibraryTab() {
     const hasFinished = txns.some(t => t.type === 'completed');
     const hasCompleted = txns.some(t => t.type === 'hundred_percent');
     const hasSkipped = txns.some(t => t.type === 'skipped');
+    const hasRequested = txns.some(t => t.type === 'requested');
 
     const newTxns: any[] = [];
     let netGpChange = 0;
@@ -133,10 +162,17 @@ export function LibraryTab() {
       netGpChange += amount;
     };
 
+    // 0. Requested Game Fee
+    if (newStatus === 'requested') {
+      if (!hasRequested) {
+        addTxn(-5, 'Requested Game', 'requested');
+      }
+    }
+
     // 1. Start Playing Entry Fee
-    // Only charge if transitioning OUT of playwish/pardoned into an active state
+    // Only charge if transitioning OUT of playwish/pardoned/requested into an active state
     if (['playing', 'played', 'completed', 'mastered'].includes(newStatus)) {
-      if ((currentStatus === 'playwish' || currentStatus === 'pardoned') && !hasStarted) {
+      if ((currentStatus === 'playwish' || currentStatus === 'pardoned' || currentStatus === 'requested') && !hasStarted) {
         addTxn(-10, 'Started Playing', 'started');
       }
     }

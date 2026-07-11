@@ -60,7 +60,7 @@ export interface BodyMetric extends BaseRecord {
 
 // ── Gaming ───────────────────────────────────────────────────────────────────
 
-export type GameStatus = 'playwish' | 'playing' | 'played' | 'completed' | 'mastered' | 'skipped' | 'pardoned';
+export type GameStatus = 'playwish' | 'requested' | 'playing' | 'played' | 'completed' | 'mastered' | 'skipped' | 'pardoned';
 export type GamePlatform = 'PC' | 'PS5' | 'PS4' | 'Switch' | 'Xbox' | 'Mobile' | 'Other';
 
 export interface GameSeries extends BaseRecord {
@@ -110,7 +110,7 @@ export interface GPTransaction extends BaseRecord {
   game_id?: string;
   amount: number;           // positive = gain, negative = loss
   reason: string;
-  type: 'started' | 'completed' | 'achievement' | 'hundred_percent' | 'milestone' | 'bonus' | 'played' | 'skipped' | 'series_complete';
+  type: 'started' | 'completed' | 'achievement' | 'hundred_percent' | 'milestone' | 'bonus' | 'played' | 'skipped' | 'series_complete' | 'requested';
 }
 
 // ── Budgie ───────────────────────────────────────────────────────────────────
