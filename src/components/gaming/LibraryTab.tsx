@@ -170,9 +170,9 @@ export function LibraryTab() {
     }
 
     // 1. Start Playing Entry Fee
-    // Only charge if transitioning OUT of playwish/pardoned/requested into an active state
+    // Only charge if transitioning OUT of playwish/pardoned into an active state
     if (['playing', 'played', 'completed', 'mastered'].includes(newStatus)) {
-      if ((currentStatus === 'playwish' || currentStatus === 'pardoned' || currentStatus === 'requested') && !hasStarted) {
+      if ((currentStatus === 'playwish' || currentStatus === 'pardoned') && !hasStarted) {
         addTxn(-10, 'Started Playing', 'started');
       }
     }
